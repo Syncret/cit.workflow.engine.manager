@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="version" basedir="." default="deploy">
+
+	<property environment="System.Variable"/>
+	
+	<property name="axis2.home" value="${System.Variable}.AXIS2_HOME"/>
+	
+	<property name="url" value="http://127.0.0.1/manager/text"/>
+	
+	<property name="username" value="tomcat"/>
+	
+	<property name="password" value="tomcat"/>
+	
+	<property name="path" value="/axis2"/>
+	
+	<property name="warpath" value="axis2.war"/>
+	
+	<path id="build.class.path">
+		<fileset dir="${axis2.home}/lib">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	
+	<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask"/>     
+	
+	<taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask"/>     
+	
+	<taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask"/>  
+	
+	<target name="deploy">  
+		<echo message="deploy start"/>  
+		<deploy url="${url}" username="${username}" password="${password}" path="${path}" war="${warpath}" update="true"/>  
+		<echo message="deploy end"/>  
+	</target>  
+	
+	<target name="undeploy">  
+    <echo message="undeploy start"/>  
+    <undeploy url="${url}" username="${username}" password="${password}" path="${path}"/>  
+    <echo message="undeploy end"/>  
+	</target>  
+
+</project>

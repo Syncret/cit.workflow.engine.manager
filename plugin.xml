@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="application"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="cit.workflow.engine.manager.Application">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="cit.workflow.engine.manager.DefaultPerspective"
+            icon="icons/perspective_default.gif"
+            id="cit.workflow.engine.manager.defaultperspective"
+            name="default">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Message"
+            allowMultiple="true"
+            icon="icons/sample2.gif"
+            class="cit.workflow.engine.manager.views.View"
+            id="cit.workflow.engine.manager.view">
+      </view>
+      <view
+            allowMultiple="true"
+            class="cit.workflow.engine.manager.views.NavigationView"
+            icon="icons/filenav_nav.gif"
+            id="cit.workflow.engine.manager.navigationView"
+            name="Navigation"
+            restorable="true">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.ServerInfoView"
+            icon="icons/server.gif"
+            id="cit.workflow.engine.manager.ServerInfoView"
+            name="Server Info">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.WorkflowInstancesView"
+            icon="icons/workflows.gif"
+            id="cit.workflow.engine.manager.WorkflowInstancesView"
+            name="Workflow Instances">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.ServerStatusView"
+            icon="icons/status.gif"
+            id="cit.workflow.engine.manager.ServerStatusView"
+            name="Server Status">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Mail"
+            id="cit.workflow.engine.manager.category">
+      </category>
+      <command
+            name="Open Mailbox"
+            description="Opens a mailbox"
+            categoryId="cit.workflow.engine.manager.category"
+            id="cit.workflow.engine.manager.open">
+      </command>
+      <command
+            name="Open Message Dialog"
+            description="Open a message dialog"
+            categoryId="cit.workflow.engine.manager.category"
+            id="cit.workflow.engine.manager.openMessage">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="cit.workflow.engine.manager.open"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+SHIFT+O">
+      </key>
+      <key
+            commandId="cit.workflow.engine.manager.openMessage"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+SHIFT+M">
+      </key>
+      <key
+            commandId="org.eclipse.ui.file.exit"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+SHIFT+Q">
+      </key>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="cit.workflow.engine.manager.application"
+            name="RCP Product">
+         <property
+               name="aboutText"
+               value="Workflow Engine Manager by CIT Lab">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/title.gif">
+         </property>
+         <property
+               name="aboutImage"
+               value="cit_lg.gif">
+         </property>
+      </product>
+   </extension>
+   <extension
+         point="org.eclipse.ui.console.consoleFactories">
+      <consoleFactory
+            class="cit.workflow.engine.manager.views.ConsoleView"
+            icon="icons/console_view.gif"
+            label="Console">
+      </consoleFactory>
+   </extension>
+
+</plugin>
