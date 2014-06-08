@@ -21,11 +21,14 @@ import cit.workflow.engine.manager.views.ConsoleView;
 
 public class RemoteDeployer {
 	private static final String PATH=Constants.MANAGER_PATH;
-	private static final String DEPLOYXML = "scripts/deploy_tomcat.xml";
-	private static final String UNDEPLOYXML="scripts/undeploy_tomcat.xml";
+	private static final String DEFAULTXML = "scripts/tomcat.xml";
+//	private static final String UNDEPLOYXML="scripts/undeploy_tomcat.xml";
 	private static final String DEFAULTBAT="scripts/deploy.bat";
 	public static final String TOMCATTEXT="/manager/text";
 	public static final String SCRIPTPATH="scripts";
+	public static final int DEPLOYTASK=0;
+	public static final int UNDEPLOYTASK=1;
+	
 	public RemoteDeployer(){}
 		
 	/**
@@ -36,10 +39,10 @@ public class RemoteDeployer {
 	 * @param scriptPath
 	 * @return the result
 	 */
-	public boolean callAnt(URL url, String serverPath,String warPath,String scriptPath) {
+	public boolean callAnt(URL url, String serverPath,String warPath,int task) {
 		try {
 			url = new URL(url, TOMCATTEXT);
-			setParams(url, serverPath,warPath, scriptPath);
+			setParams(url, serverPath,warPath,task);
 			Runtime rt = Runtime.getRuntime();
 			Process p;
 			boolean success = false;
@@ -85,7 +88,7 @@ public class RemoteDeployer {
 	 * @return whether deploy success or not
 	 */
 	public boolean deploy(URL url, String serverPath,String warPath) {
-		return callAnt(url, serverPath, warPath,PATH+DEPLOYXML);
+		return callAnt(url, serverPath, warPath,DEPLOYTASK);
 	}
 	
 	/**
@@ -95,7 +98,7 @@ public class RemoteDeployer {
 	 * @return whether undeploy success or not
 	 */
 	public boolean undeploy(URL url, String serverPath) {
-		return callAnt(url, serverPath, null,PATH+UNDEPLOYXML);
+		return callAnt(url, serverPath, null,UNDEPLOYTASK);
 	}
 	
 	/**
@@ -105,11 +108,15 @@ public class RemoteDeployer {
 	 * @param warPath the path of the war
 	 * @param scriptPath 指定build.xml的路径
 	 */
-	public void setParams(URL url, String serverPath, String warPath,String scriptPath){
+	public void setParams(URL url, String serverPath, String warPath,int task){
+		String scriptPath=PATH+DEFAULTXML;
 		try {
 			SAXReader reader = new SAXReader();
 			Document document = reader.read(new File(scriptPath));
-			Attribute attr=(Attribute)document.selectSingleNode("/project/property[@name='url']/@value");
+			Attribute attr=(Attribute)document.selectSingleNode("/project/@default");
+			if(task==DEPLOYTASK)attr.setValue("deploy");
+			else if(task==UNDEPLOYTASK)attr.setValue("undeploy");
+			attr=(Attribute)document.selectSingleNode("/project/property[@name='url']/@value");
 			attr.setValue(url.toString());
 			attr=(Attribute)document.selectSingleNode("/project/property[@name='path']/@value");
 			attr.setValue(serverPath);
@@ -122,10 +129,8 @@ public class RemoteDeployer {
 			writer.close();
 			ConsoleView.println("Set url to "+url+" in "+scriptPath);
 		} catch (DocumentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

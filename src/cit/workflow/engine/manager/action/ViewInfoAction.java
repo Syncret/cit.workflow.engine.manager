@@ -19,6 +19,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 
 import cit.workflow.engine.manager.data.ServerAgent;
+import cit.workflow.engine.manager.data.ServiceAgent;
 import cit.workflow.engine.manager.views.ServerInfoView;
 import cit.workflow.engine.manager.views.WorkflowInstancesView;
 
@@ -44,13 +45,19 @@ public class ViewInfoAction extends Action implements IDoubleClickListener,IWork
 				ServerInfoView infoView=(ServerInfoView)window.getActivePage().findView(ServerInfoView.ID);
 				infoView.setData(servers);
 				try {
+					window.getActivePage().showView(ServerInfoView.ID);
+				} catch (PartInitException e) {
+					e.printStackTrace();
+				}
+			}
+			if(element instanceof ServiceAgent){
+				try {
 					window.getActivePage().showView(WorkflowInstancesView.ID);
 				} catch (PartInitException e) {
 					e.printStackTrace();
 				}
 				WorkflowInstancesView workflowInstancesView=(WorkflowInstancesView)window.getActivePage().findView(WorkflowInstancesView.ID);
-				workflowInstancesView.setData(((ServerAgent)element).getWorkflowInstance());
-
+				workflowInstancesView.setFlowData((ServiceAgent)element);
 			}
 		}
 	}

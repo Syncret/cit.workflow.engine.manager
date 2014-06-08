@@ -8,14 +8,15 @@ import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import cit.workflow.engine.manager.Activator;
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 public class ServerList implements TreeElement{
 //	private static List<ServerAgent> servers=new ArrayList<ServerAgent>();
-	private static Hashtable<URL, ServerAgent> servers=new Hashtable<URL,ServerAgent>();
+	private static List<ServerAgent> servers=new ArrayList<ServerAgent>();
 	public static ServerList allServers=new ServerList();
 	
 	public static ServerList getInstance(){
@@ -36,34 +37,52 @@ public class ServerList implements TreeElement{
 
 	@Override
 	public List<ServerAgent> getChildren() {
-		List<ServerAgent> list=new ArrayList<>();
-		Enumeration<ServerAgent> e=servers.elements();
-		while (e.hasMoreElements()) {
-			ServerAgent serverAgent = (ServerAgent) e.nextElement();
-			list.add(serverAgent);
-		}
-		return list;
+		return getServers();
 	}
 	
 	public static void addServer(ServerAgent server){
-		if(servers.containsKey(server.getUrl())){
-			Shell shell=Activator.getDefault().getWorkbench().getActiveWorkbenchWindow().getShell();
-			MessageDialog.openWarning(shell, "Add Server", "This Server Already exsit");
+		if(servers.contains(server)){
+			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Add Server", server.getURL()+" Already exsit");
 			return;
 		}
-		servers.put(server.getUrl(),server);
+		servers.add(server);
 	}
+	
+	public static void removeServer(ServerAgent server){
+		if(!servers.contains(server)){
+			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Remove Server", server.getURL()+" is not in the list");
+			return;
+		}
+//		if(server.getState()!=ServerAgent.STATE_STOPPED){
+//			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Remove Server", server.getURL()+" is still running");
+//			return;
+//		}
+		servers.remove(server);
+	}
+	
 	
 	public static List<ServerAgent> getServers(){
-		List<ServerAgent> list=new ArrayList<>();
-		Enumeration<ServerAgent> e=servers.elements();
-		while (e.hasMoreElements()) {
-			ServerAgent serverAgent = (ServerAgent) e.nextElement();
-			list.add(serverAgent);
-		}
-		return list;
+		return servers;
 	}
 	
+	/**
+	 * get those running engine services
+	 * @return the list contains the running engine services
+	 */
+	public static List<ServiceAgent> getEngineServices(){
+		ArrayList<ServiceAgent> services=new ArrayList<>();
+		for(ServerAgent server:servers){
+			if(server.getState()==ServerAgent.STATE_RUNNING ){
+				ServiceAgent service=server.getEngineSerivce();
+				if(service!=null && service.getState()==ServiceAgent.STATE_RUNNING){
+					services.add(service);
+				}
+			}
+		}
+		return services;
+	}
+	
+
 	@Override
 	public TreeElement getParent() {
 		return null;
@@ -72,5 +91,6 @@ public class ServerList implements TreeElement{
 	public Image getImage() {
 		return ImageFactory.getImage(ImageFactory.SERVERS);
 	}
+
 
 }

@@ -1,5 +1,6 @@
 package cit.workflow.engine.manager.data;
 
+import java.net.URL;
 import java.util.List;
 
 import org.eclipse.swt.graphics.Image;

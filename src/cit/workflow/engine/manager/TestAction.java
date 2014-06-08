@@ -1,10 +1,14 @@
 package cit.workflow.engine.manager;
 
+import java.awt.Dialog;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.WorkbenchWindow;
+
+import cit.workflow.engine.manager.dialog.AssignWorkflowDialog;
 
 
 public class TestAction extends Action {
@@ -23,6 +27,10 @@ public class TestAction extends Action {
 
     public void run() {
     	//pop a message
-        MessageDialog.openInformation(window.getShell(), "Open", "Open Message Dialog!"); 
+//        MessageDialog.openInformation(window.getShell(), "Open", "Open Message Dialog!"); 
+    	AssignWorkflowDialog dl=new AssignWorkflowDialog(window.getShell());
+    	dl.open();
+    	System.out.println(dl.getSelectWorkflow());
+    	
     }
 }

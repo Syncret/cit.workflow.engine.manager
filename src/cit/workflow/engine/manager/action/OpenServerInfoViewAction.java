@@ -6,7 +6,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 public class OpenServerInfoViewAction extends Action implements IWorkbenchAction{
 	private final IWorkbenchWindow window;

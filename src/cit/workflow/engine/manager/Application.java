@@ -6,7 +6,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 /**
  * This class controls all aspects of the application's execution

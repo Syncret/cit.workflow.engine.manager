@@ -1,6 +1,7 @@
 package cit.workflow.engine.manager.views;
 
 import java.awt.Window;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ import cit.workflow.engine.manager.action.ViewInfoAction;
 import cit.workflow.engine.manager.action.ViewInfoAction;
 import cit.workflow.engine.manager.data.ServerList;
 import cit.workflow.engine.manager.data.TreeElement;
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 public class NavigationView extends ViewPart {
 	public NavigationView() {
@@ -33,7 +34,6 @@ public class NavigationView extends ViewPart {
 	public static final String ID = "cit.workflow.engine.manager.navigationView";
 	
 	private TreeViewer viewer;
-	private Menu popMenu;
 	private List<TreeElement> treeRoot;
 	 
 

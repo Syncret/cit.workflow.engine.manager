@@ -21,7 +21,7 @@ import org.eclipse.ui.part.ViewPart;
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
 import cit.workflow.engine.manager.data.TreeElement;
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 import org.eclipse.swt.widgets.Table;
 

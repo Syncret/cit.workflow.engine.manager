@@ -28,7 +28,7 @@
 	
 	<property name="repository.path" value="${axis2.home}/repository/services"/>
 	
-	<property name="url" value="http://localhost:8080/manager/text"/>
+	<property name="url" value="http://192.168.1.13:8080/manager/text"/>
 	
 	<property name="username" value="tomcat"/>
 	

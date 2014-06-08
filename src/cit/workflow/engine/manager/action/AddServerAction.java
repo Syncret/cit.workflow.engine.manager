@@ -3,17 +3,20 @@ package cit.workflow.engine.manager.action;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 
 import cit.workflow.engine.manager.ICommandIds;
 
+import java.io.IOException;
 import java.net.*;
 
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
-import cit.workflow.engine.manager.image.ImageFactory;
+import cit.workflow.engine.manager.util.ImageFactory;
+import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.engine.manager.views.NavigationView;
 
 public class AddServerAction extends Action implements IWorkbenchAction{
@@ -37,8 +40,8 @@ public class AddServerAction extends Action implements IWorkbenchAction{
         	try {
 				url=new URL(inputDialog.getValue());
 			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MessageDialog.openError(window.getShell(), "Error", "URL invalid");
+				return;
 			}
         	ServerList.addServer(new ServerAgent(url,ServerAgent.STATE_STOPPED));
         	NavigationView view=(NavigationView)window.getActivePage().findView(NavigationView.ID);

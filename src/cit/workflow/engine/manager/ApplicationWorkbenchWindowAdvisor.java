@@ -2,6 +2,7 @@ package cit.workflow.engine.manager;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.Date;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -18,6 +19,7 @@ import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
 import cit.workflow.engine.manager.data.ServiceAgent;
 import cit.workflow.engine.manager.data.WorkflowInstanceAgent;
+import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.views.ConsoleView;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -41,6 +43,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
         configurer.setShowPerspectiveBar(true);
         configurer.setTitle("Workflow Manager");
         
+        
         //set style
 //        IPreferenceStore preStore=PrefUtil.getAPIPreferenceStore();
 //        preStore.setValue(IWorkbenchPreferenceConstants.SHOW_TRADITIONAL_STYLE_TABS, false);
@@ -54,50 +57,52 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
     	ConsoleView.showConsole();
     }
     
+    @Override
+    public void postWindowClose(){
+    	try {
+			ConnectionPool.getInstance().closeConnectionPool();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+    }
+    
     //initial some data for test
     private void initDummyDate(){
     	URL url1 = null;
     	URL url2 = null;
+    	URL localURL =null;
 		try {
-			url1 = new URL("http://192.168.1.1");
+			url1 = new URL("http://192.168.1.34:8080");
 			url2=new URL("http://192.168.1.2:8080");
+			localURL=new URL("http://localhost:8080");
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return;
 		}
     	ServerAgent server=new ServerAgent(url1,ServerAgent.STATE_RUNNING);
     	//add service
-    	server.addService(new ServiceAgent(server,"Engine Service",ServiceAgent.STATE_RUNNING));
-    	server.addService(new ServiceAgent(server,"Test Service",ServiceAgent.STATE_STOPPED));
+    	ServiceAgent sa1=new ServiceAgent(server,"Engine Service","workflow", "Workflow", ServiceAgent.STATE_RUNNING,ServiceAgent.TYPE_ENGINE);
+    	server.addService(sa1);
+//    	server.addService(new ServiceAgent(server,"Test Service","","",ServiceAgent.STATE_STOPPED));
     	
     	//add workflow instances
-    	WorkflowInstanceAgent instance1=new WorkflowInstanceAgent("testWorkflow1", 1, server, new Date(), 100); 
-    	instance1.setState(WorkflowInstanceAgent.STATE_RUNNING);
-    	instance1.setRunningTime(30);
-    	server.addWorkflowInstance(instance1);
     	
-    	WorkflowInstanceAgent instance2=new WorkflowInstanceAgent("testWorkflow2", 1, server, new Date(), 100); 
-    	instance2.setState(WorkflowInstanceAgent.STATE_FINISHED);
-    	instance2.setEndTime(new Date());
-    	server.addWorkflowInstance(instance2);
+    	WorkflowInstanceAgent instance4=new WorkflowInstanceAgent("testflow1", 1001, sa1, System.currentTimeMillis(), 30);
+    	instance4.setState(WorkflowInstanceAgent.STATE_RUNNING);
+    	sa1.addWorkflowInstance(instance4);
+
+    	WorkflowInstanceAgent instance5=new WorkflowInstanceAgent("testWorkflow", 1, sa1, System.currentTimeMillis(), 100); 
+    	instance5.setState(WorkflowInstanceAgent.STATE_FINISHED);
+    	instance5.setProcessID("7ab0a981-73d3-48e1-8467-cdf27a631aad");
+    	sa1.addWorkflowInstance(instance5);
     	
-    	WorkflowInstanceAgent instance3=new WorkflowInstanceAgent("testWorkflow3", 1, server, new Date(), 100); 
-    	instance3.setState(WorkflowInstanceAgent.STATE_WAITING);
-    	server.addWorkflowInstance(instance3);
-    	
-//    	WorkflowInstanceAgent instance4=new WorkflowInstanceAgent("testWorkflow4", 1, server, new Date(), 100); 
-//    	instance4.setState(WorkflowInstanceAgent.STATE_RUNNING);
-//    	instance4.setRunningTime(120);
-//    	server.addWorkflowInstance(instance4);
-//    	
-    	WorkflowInstanceAgent instance5=new WorkflowInstanceAgent("testWorkflow5", 1, server, new Date(), 100); 
-    	instance5.setState(WorkflowInstanceAgent.STATE_STOPPED);
-    	instance5.setRunningTime(70);
-    	server.addWorkflowInstance(instance5);
-    	
-    	ServerList.addServer(server);
     	ServerAgent server2=new ServerAgent(url2,ServerAgent.STATE_STOPPED);
-    	ServerList.addServer(server2);
+    	
+    	ServerAgent localServer=new ServerAgent(localURL,ServerAgent.STATE_RUNNING);
+    	localServer.addService(new ServiceAgent(localServer, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_RUNNING,ServiceAgent.TYPE_ENGINE));
+    	ServerList.addServer(server);
+//    	ServerList.addServer(server2);
+    	ServerList.addServer(localServer);
     }
     
 }
