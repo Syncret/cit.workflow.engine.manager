@@ -16,7 +16,7 @@ public class OpenServerStatusViewAction extends Action implements IWorkbenchActi
 		this.window=window;
 		this.setText("&Server Status");
 		setToolTipText("Open Server Status View");
-		this.setImageDescriptor(ImageFactory.getImageDescriptor(ImageFactory.SERVERSTATUS));
+		this.setImageDescriptor(ImageFactory.getImageDescriptor(ImageFactory.STATUS));
 		
 	}
 	

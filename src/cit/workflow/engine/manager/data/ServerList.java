@@ -41,10 +41,10 @@ public class ServerList implements TreeElement{
 	}
 	
 	public static void addServer(ServerAgent server){
-		if(servers.contains(server)){
-			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Add Server", server.getURL()+" Already exsit");
-			return;
-		}
+//		if(servers.contains(server)){
+//			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Add Server", server.getURL()+" Already exsit");
+//			return;
+//		}
 		servers.add(server);
 	}
 	
@@ -69,14 +69,12 @@ public class ServerList implements TreeElement{
 	 * get those running engine services
 	 * @return the list contains the running engine services
 	 */
-	public static List<ServiceAgent> getEngineServices(){
+	public static List<ServiceAgent> getEngineServices(int serviceState){
 		ArrayList<ServiceAgent> services=new ArrayList<>();
 		for(ServerAgent server:servers){
-			if(server.getState()==ServerAgent.STATE_RUNNING ){
-				ServiceAgent service=server.getEngineSerivce();
-				if(service!=null && service.getState()==ServiceAgent.STATE_RUNNING){
-					services.add(service);
-				}
+			ServiceAgent service=server.getEngineSerivce();
+			if(service!=null && service.getState()==serviceState){
+				services.add(service);
 			}
 		}
 		return services;

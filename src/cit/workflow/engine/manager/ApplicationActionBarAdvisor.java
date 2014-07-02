@@ -22,6 +22,7 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 
 import cit.workflow.engine.manager.action.AddServerAction;
+import cit.workflow.engine.manager.action.ControllerAction;
 import cit.workflow.engine.manager.action.GenRequestAction;
 import cit.workflow.engine.manager.action.OpenConsoleViewAction;
 import cit.workflow.engine.manager.action.OpenNavigationViewAction;
@@ -45,6 +46,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction newWindowAction;
     private OpenViewAction openViewAction;
     private Action messagePopupAction;
+    private IWorkbenchAction controllerAction;
     
     //actions under server menu
     private IWorkbenchAction addServerAction;
@@ -87,6 +89,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         messagePopupAction = new TestAction("test button", window);
         register(messagePopupAction);
         
+        controllerAction=new ControllerAction(window);
         //under server menu
         addServerAction=new AddServerAction(window);
         genRequestAction=new GenRequestAction(window);
@@ -149,6 +152,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         toolbar.add(addServerAction);
         toolbar.add(genRequestAction);
         toolbar.add(messagePopupAction);
+        toolbar.add(controllerAction);
     }
     
     protected void fillStatusLine(IStatusLineManager statusLine){

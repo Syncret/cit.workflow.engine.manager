@@ -17,9 +17,12 @@ public class WorkflowInstanceAgent {
 	private int minDuration;
 	private double costTime;
 	private int state;
-	private long startTime;
-	private long endTime;
-	private long busyTime;
+	private long startTime=0;
+	private long endTime=0;
+	private long busyTime=0;
+	private long acceptTime=0;
+	
+	private boolean show=false;
 	
 	public static final int STATE_RUNNING=0;
 	public static final int STATE_FINISHED=1;
@@ -29,21 +32,22 @@ public class WorkflowInstanceAgent {
 	public static final int STATE_FAILED=5;
 	
 	private static final String[] states={"Running","Finished","Stopped","Abortted","Waiting","Failed"};
-	public WorkflowInstanceAgent(String name, int workflowID,
-			ServiceAgent service, long startTime, double expectTime) {
-		super();
-		this.name = name;
-		this.workflowID = workflowID;
-		this.service = service;
-		this.startTime = startTime;
-		this.expectTime = expectTime;
-		this.state=STATE_WAITING;
-	}
+//	public WorkflowInstanceAgent(String name, int workflowID,
+//			ServiceAgent service, long startTime, double expectTime) {
+//		super();
+//		this.name = name;
+//		this.workflowID = workflowID;
+//		this.service = service;
+//		this.startTime = startTime;
+//		this.expectTime = expectTime;
+//		this.state=STATE_WAITING;
+//	}
 	
 	public WorkflowInstanceAgent(int workflowID) {
 		super();
 		this.workflowID = workflowID;
 		this.state=STATE_WAITING;
+		this.acceptTime=System.currentTimeMillis();
 	}
 	
 	public double getExpectTime() {
@@ -105,6 +109,14 @@ public class WorkflowInstanceAgent {
 		if(state==STATE_FAILED) return ImageFactory.getImage(ImageFactory.DELETE);
 		return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
 	}
+	
+	public String getServerName(){
+		ServiceAgent service=this.getService();
+		if(service==null)return "";
+		ServerAgent server=service.getServer();
+		if(server==null)return "";
+		return server.getName();
+	}
 	public long getEndTime() {
 		return endTime;
 	}
@@ -154,5 +166,27 @@ public class WorkflowInstanceAgent {
 
 	public void setBusyTime(long busyTime) {
 		this.busyTime = busyTime;
+	}
+
+	public boolean isShow() {
+		return show;
+	}
+
+	public void setShow(boolean show) {
+		this.show = show;
+	}
+
+	public long getWaitTime() {
+		if(startTime>0)return startTime-acceptTime; 
+		else return System.currentTimeMillis()-acceptTime;
+	}
+	
+	public long getSpentTime() {
+		if(endTime>0)return endTime-acceptTime; 
+		else return System.currentTimeMillis()-acceptTime;
+	}
+
+	public void setAcceptTime(long acceptTime) {
+		this.acceptTime = acceptTime;
 	}
 }

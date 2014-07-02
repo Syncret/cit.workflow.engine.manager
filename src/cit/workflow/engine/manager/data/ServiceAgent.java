@@ -2,12 +2,20 @@ package cit.workflow.engine.manager.data;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.RemoteException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.swt.graphics.Image;
 
+import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
+import cit.workflow.engine.manager.util.RequestAssigner;
+import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.webservice.WorkflowServerClient;
 
 public class ServiceAgent implements TreeElement{
@@ -16,6 +24,14 @@ public class ServiceAgent implements TreeElement{
 	private String deployPath;
 	private String namePath;
 	private int type;
+	private int capacity=8;
+	private int runningWorkflows=0;
+	private ReentrantLock insLock=new ReentrantLock();
+	public int getRunningWorkflows() {
+		return runningWorkflows;
+	}
+
+
 	private List<WorkflowInstanceAgent> workflows;
 	
 	private int state;
@@ -23,6 +39,12 @@ public class ServiceAgent implements TreeElement{
 	public static final int STATE_STOPPED=0;
 	public static final int STATE_RUNNING=1;
 	public static final int STATE_INVALID=2;
+	public static final int STATE_AVAILABLE=3;
+	public static final int STATE_ACTIVATING=4;
+	public static final int STATE_SHUTTING=5;
+	private static final String[] STATESTRING={"Stopped","Running","Invalid","Available","Activating","Shutting"};
+	public static String getStateString(int state){return STATESTRING[state];}
+	
 	
 	public static final int TYPE_ENGINE=11;
 	public static final int TYPE_OTHERS=10;
@@ -37,6 +59,7 @@ public class ServiceAgent implements TreeElement{
 		this.type=type;
 		workflows=new ArrayList<>();
 	}
+	
 
 
 
@@ -74,6 +97,8 @@ public class ServiceAgent implements TreeElement{
 	public int getState() {
 		return state;
 	}
+	
+	
 
 	/**
 	 * @param state the state to set
@@ -99,8 +124,15 @@ public class ServiceAgent implements TreeElement{
 
 	@Override
 	public Image getImage() {
+		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE)return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
 		if(state==STATE_RUNNING)return ImageFactory.getImage(ImageFactory.RUNNING);
-		if(state==STATE_STOPPED)return ImageFactory.getImage(ImageFactory.STOPPED);
+		if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING)return ImageFactory.getImage(ImageFactory.STOPPED);
+		return ImageFactory.getImage(ImageFactory.SERVERS);
+	}
+	public static Image getImage(int state) {
+		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE)return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
+		if(state==STATE_RUNNING)return ImageFactory.getImage(ImageFactory.RUNNING);
+		if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING)return ImageFactory.getImage(ImageFactory.STOPPED);
 		return ImageFactory.getImage(ImageFactory.SERVERS);
 	}
 	
@@ -161,7 +193,8 @@ public class ServiceAgent implements TreeElement{
 	}
 
 	public void addWorkflowInstance(WorkflowInstanceAgent workflow){
-		workflow.setService(this);
+		if(this!=RequestAssigner.getWaitService()&&workflow.getService()==null)
+			workflow.setService(this);
 		workflows.add(workflow);
 	}
 	
@@ -179,6 +212,120 @@ public class ServiceAgent implements TreeElement{
 
 	public void setType(int type) {
 		this.type = type;
+	}
+
+
+
+	public int getCapacity() {
+		return capacity;
+	}
+
+	public void setCapacity(int capacity) {
+		this.capacity = capacity;
+	}
+	
+	public int getVacancy(){
+		return capacity-runningWorkflows;
+	}
+	
+	public void assignRequest(WorkflowInstanceAgent wsAgent){
+		if(wsAgent.getService()!=null && wsAgent.getService()!=this){
+			ConsoleView.println("Error: Request assignned to wrong service");
+			return;
+		}
+		if(runningWorkflows>=capacity){
+			ConsoleView.println("Error: Request assignned to full load server");
+			return;
+		}
+		if(wsAgent.getService()==null)this.addWorkflowInstance(wsAgent);
+		insLock.lock();
+		runningWorkflows++;
+		insLock.unlock();
+//		ConsoleView.println("Workflow "+wsAgent.getWorkflowID()+" assigned to "+this.getServer().getName());
+		Thread thread = new WorkflowClientThread(wsAgent);
+		thread.start();
+	}
+	
+	private class WorkflowClientThread extends Thread{
+		private ServiceAgent service;
+		private WorkflowInstanceAgent wsAgent;
+		private String processID;
+		boolean result=false;
+		private String processLog;
+		long starttime=0;
+		long endtime=0;
+		long idletime=0;
+		public WorkflowClientThread(WorkflowInstanceAgent wsAgent){
+			this.wsAgent=wsAgent;
+			this.service=wsAgent.getService();
+		}
+		
+		@Override
+		public void run(){
+			try {
+				WorkflowServerClient client=service.getClient();
+				if(client==null){
+					result=false;
+				} else {
+					starttime= System.currentTimeMillis();
+					wsAgent.setStartTime(starttime);
+					wsAgent.setState(WorkflowInstanceAgent.STATE_RUNNING);
+					Object[] callResult = client.executeWorkflow(wsAgent.getWorkflowID());
+					processID=(String)callResult[0];
+					processLog = (String) callResult[1];
+					if (processLog.endsWith("Failed\n")) result = false;
+					else result = true;
+//					starttime=(callResult[2]==null?0:(long)callResult[2]);
+//					endtime = (callResult[3] == null ? 0 : (long) callResult[3]);
+					endtime=System.currentTimeMillis();
+					idletime = (callResult[4] == null ? 0 : (int) callResult[4]);
+					wsAgent.setStartTime(starttime);
+					wsAgent.setProcessID(processID);
+					wsAgent.setEndTime(endtime);
+					wsAgent.setBusyTime(endtime-starttime-idletime);
+//					ConsoleView.println("Execute " + processID + ":" + (result ? "complete" : "failed"));
+				}
+			} catch (RemoteException e) {
+				result=false;
+				e.printStackTrace();
+			}
+			wsAgent.setState(result?WorkflowInstanceAgent.STATE_FINISHED:WorkflowInstanceAgent.STATE_FAILED);
+			insLock.lock();
+			service.runningWorkflows--;
+			insLock.unlock();
+			if(service.runningWorkflows==0 && service.getState()==ServiceAgent.STATE_SHUTTING){
+				service.setState(ServiceAgent.STATE_AVAILABLE);
+				service.getServer().setState(ServerAgent.STATE_AVAILABLE);
+				ConsoleView.println("Server "+service.getServer().getName()+" shutdown");
+				
+			}
+//			ConsoleView.println((endtime-starttime-idletime)+"");
+			RequestAssigner.getInstance().workflowComplete(wsAgent);
+			if(processID!=null){
+				Connection conn=null;
+				PreparedStatement pst=null;
+				try {
+					conn=ConnectionPool.getInstance().getConnection();
+					String sql="INSERT INTO processlogs(ProcessID, log, starttime,endtime, idletime) VALUES (?,?,?,?,?)";
+					pst=conn.prepareStatement(sql);
+					pst.setString(1, processID);
+					pst.setString(2, processLog);
+					pst.setLong(3, starttime);
+					pst.setLong(4, endtime);
+					pst.setLong(5, idletime);
+					int rs=pst.executeUpdate();
+					pst.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				} finally{
+					if(pst!=null){
+						try {pst.close();}
+						catch (SQLException e) {e.printStackTrace();}
+					}
+					ConnectionPool.getInstance().returnConnection(conn);
+				}
+			}
+		}
 	}
 
 }

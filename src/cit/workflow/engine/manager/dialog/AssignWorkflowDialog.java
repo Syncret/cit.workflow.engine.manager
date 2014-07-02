@@ -41,7 +41,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 
 public class AssignWorkflowDialog extends Dialog {
-	private static final int MAXINSTACES=100;
+	private static final int MAXINSTACES=500;
 	Connection conn = null;
 	private int result=-1;
 	private int selectWorkflowID=-1;

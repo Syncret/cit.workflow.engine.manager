@@ -20,6 +20,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
+import cit.workflow.engine.manager.data.ServiceAgent;
 import cit.workflow.engine.manager.data.TreeElement;
 import cit.workflow.engine.manager.util.ImageFactory;
 
@@ -33,9 +34,11 @@ public class ServerInfoView extends ViewPart {
 	public static final int HOST=0;
 	public static final int PORT=1;
 	public static final int STATE=2;
+	public static final int CAPACITY=3;
+	public static final int RUNNINGINSTANCES=4;
 	
 	
-	public static final String[] COLUMN_NAME={"Server","Port","State"};
+	public static final String[] COLUMN_NAME={"Server","Port","State","Capacity","Running Instances"};
 	
 	public ServerInfoView() {
 	}
@@ -89,10 +92,7 @@ public class ServerInfoView extends ViewPart {
 			public Image getColumnImage(Object element, int columnIndex) {
 				if(columnIndex==STATE){
 					ServerAgent server = (ServerAgent) element;
-					if (server.getState()==ServerAgent.STATE_RUNNING)
-						return ImageFactory.getImage(ImageFactory.RUNNING);
-					if (server.getState()==ServerAgent.STATE_STOPPED)
-						return ImageFactory.getImage(ImageFactory.STOPPED);
+					return server.getImage();
 				}
 				return null;
 			}
@@ -100,13 +100,18 @@ public class ServerInfoView extends ViewPart {
 			@Override
 			public String getColumnText(Object element, int columnIndex) {
 				ServerAgent server=(ServerAgent)element;
+				ServiceAgent service=server.getEngineSerivce();
 				if(columnIndex==HOST)return server.getServer().getHost();
 				if(columnIndex==PORT)return server.getServer().getPort()+"";
 				if(columnIndex==STATE){
-					if (server.getState()==ServerAgent.STATE_RUNNING)
-						return "Running";
-					if (server.getState()==ServerAgent.STATE_STOPPED)
-						return "Stopped";
+					return ServiceAgent.getStateString(server.getState());
+				}
+				if(columnIndex==CAPACITY){
+					if(service==null)return "";
+					else return service.getCapacity()+"";
+				}
+				if(columnIndex==RUNNINGINSTANCES){
+					return service.getRunningWorkflows()+"";
 				}
 				return null;
 			}

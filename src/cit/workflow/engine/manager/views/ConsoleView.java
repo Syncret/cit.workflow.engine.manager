@@ -2,6 +2,9 @@ package cit.workflow.engine.manager.views;
   
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.eclipse.ui.console.ConsolePlugin;  
 import org.eclipse.ui.console.IConsole;  
@@ -116,7 +119,9 @@ public class ConsoleView implements IConsoleFactory {
     } 
     
     public static void println(String message){
-    	println(message,false);
+    	SimpleDateFormat s=new SimpleDateFormat("HH:mm:ss - ");
+    	String now=s.format(new Date());
+    	println(now+message,false);
     }
     
 }  

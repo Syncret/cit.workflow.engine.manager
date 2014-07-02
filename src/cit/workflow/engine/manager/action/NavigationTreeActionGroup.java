@@ -6,14 +6,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Date;
-import java.util.LinkedList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -21,26 +17,25 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ActionGroup;
-import org.jfree.data.time.Second;
-import org.jfree.data.time.TimeSeries;
 
 import cit.workflow.Constants;
-import cit.workflow.SelectWorkflowDialog;
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
 import cit.workflow.engine.manager.data.ServiceAgent;
@@ -88,6 +83,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 					deployMenuManager.add(new Separator());
 					deployMenuManager.add(new DeployServiceAction(DeployServiceAction.OTHERSERVICE));
 					manager.add(deployMenuManager);
+					manager.add(new SetServerNameAction());
 					manager.add(new RemoveServerAction());
 					manager.add(new TestConnectionAction());
 					manager.add(new CheckServiceAction());
@@ -98,6 +94,13 @@ public class NavigationTreeActionGroup extends ActionGroup {
 					manager.add(new StartServiceAction());
 					manager.add(new StopServiceAction());
 					manager.add(new UndeployServiceAction());
+					manager.add(new SetServerCapacityAction());
+					MenuManager setStatusManager=new MenuManager("Set Status");
+					setStatusManager.add(new SetServiceStatusAction(ServiceAgent.STATE_AVAILABLE));
+					setStatusManager.add(new SetServiceStatusAction(ServiceAgent.STATE_INVALID));
+					setStatusManager.add(new SetServiceStatusAction(ServiceAgent.STATE_RUNNING));
+					setStatusManager.add(new SetServiceStatusAction(ServiceAgent.STATE_STOPPED));
+					manager.add(setStatusManager);
 					manager.add(new TestConnectionAction());
 				}
 			}
@@ -392,6 +395,102 @@ public class NavigationTreeActionGroup extends ActionGroup {
 		}
 	}
 	
+	public class SetServerCapacityAction extends Action implements IWorkbenchAction{
+		private ServiceAgent service=null;
+		
+		public SetServerCapacityAction(){
+			super();
+			this.setText("Set Capacity");
+		}
+		
+		@Override
+		public void run() {
+			TreeElement element=getSelTreeEntry();
+			if(element==null||!(element instanceof ServiceAgent))return;
+			service=(ServiceAgent)element;
+	        InputDialog inputDialog=new InputDialog(window.getShell(), "Set Capacity", "Set Capacity:", 
+	        		"", new IntValidator());
+	        int r=inputDialog.open();
+	        if(r==Window.OK){
+	        	int c=Integer.parseInt(inputDialog.getValue());
+	        	service.setCapacity(c);
+	        }
+	    }
+	    
+		private class IntValidator implements IInputValidator {
+			public String isValid(String newText) {
+				try {
+					Integer.parseInt(newText);
+				} catch (Exception e) {
+					return e.getMessage();
+				}
+				return null;
+			}
+		}
+		
+		
+		@Override
+		public void dispose(){
+		}
+	}
+	
+	
+	public class SetServerNameAction extends Action implements IWorkbenchAction{
+		private ServerAgent server=null;
+		
+		public SetServerNameAction(){
+			super();
+			this.setText("Set Name");
+		}
+		
+		@Override
+		public void run() {
+			TreeElement element=getSelTreeEntry();
+			if(element==null||!(element instanceof ServerAgent))return;
+			server=(ServerAgent)element;
+	        InputDialog inputDialog=new InputDialog(window.getShell(), "Set Name", "Set Name:", 
+	        		"", null);
+	        int r=inputDialog.open();
+	        if(r==Window.OK){
+	        	String name=inputDialog.getValue();
+	        	if(name!=null && name.length()>0){
+					server.setName(name);
+					refreshTree();
+	        	}
+	        }
+	    }
+	    
+		@Override
+		public void dispose(){
+		}
+	}
+	
+	public class SetServiceStatusAction extends Action implements IWorkbenchAction{
+		private ServiceAgent service=null;
+		private int state;
+		public SetServiceStatusAction(int state){
+			super();
+			this.state=state;
+			this.setText(ServiceAgent.getStateString(state));
+		}
+		
+		@Override
+		public void run() {
+			TreeElement element=getSelTreeEntry();
+			if(element==null||!(element instanceof ServiceAgent))return;
+			service=(ServiceAgent)element;
+	        service.setState(state);
+	        service.getServer().setState(state);
+	        refreshTree();
+	    }
+	    
+		@Override
+		public void dispose(){
+		}
+	}
+	
+	
+	
 	public class ViewPerformanceAction extends Action implements IWorkbenchAction{
 		private ServiceAgent service=null;
 		
@@ -538,23 +637,23 @@ public class NavigationTreeActionGroup extends ActionGroup {
 			for (int i = 0; i < selectNum; i++) {
 				WorkflowInstanceAgent wsAgent = new WorkflowInstanceAgent(workflowID);
 				wsAgent.setName(name);
-				wsAgent.setService(service);
 				wsAgent.setExpectTime(expectTime);
 				wsAgent.setMaxDuration(maxDuration);
 				wsAgent.setMinDuration(minDuration);
-				wsAgent.setState(WorkflowInstanceAgent.STATE_STOPPED);
 				wsAgent.setProcessID("");
+				wsAgent.setService(service);
+				RequestAssigner.getInstance().acceptRequest(wsAgent);
+			}
+			WorkflowInstancesView workflowInstancesView = (WorkflowInstancesView) window.getActivePage().findView(
+					WorkflowInstancesView.ID);
+			if(workflowInstancesView.getService()==null){
+				workflowInstancesView.setFlowData(service);
 				try {
 					window.getActivePage().showView(WorkflowInstancesView.ID);
 				} catch (PartInitException e) {
 					e.printStackTrace();
 				}
-				RequestAssigner.getInstance().assignRequest(wsAgent);
 			}
-			
-			WorkflowInstancesView workflowInstancesView = (WorkflowInstancesView) window.getActivePage().findView(
-					WorkflowInstancesView.ID);
-			workflowInstancesView.setFlowData(service);
 		}
 		
 		@Override

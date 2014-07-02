@@ -1,5 +1,6 @@
 package cit.workflow.engine.manager.data;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,21 +12,49 @@ import cit.workflow.engine.manager.util.ImageFactory;
 public class ServerAgent implements TreeElement{
 	private URL url;
 	private int state;
+	private int type;
+	private String name;
 	private List<ServiceAgent> services;
 	private ServiceAgent engineSerivce=null;
 	private List<WorkflowInstanceAgent> workflows;
 	
 	public static final int STATE_STOPPED=0;
 	public static final int STATE_RUNNING=1;
+	public static final int STATE_INVALID=2;
+	public static final int STATE_AVAILABLE=3;
+	public static final int STATE_ACTIVATING=4;
+	public static final int STATE_SHUTTING=5;
+	
+	public static final int TYPE_SMALL=0;
+	public static final int TYPE_MIDDLE=1;
+	public static final int TYPE_BIG=2;
+	public static final int[] SERVICECAPACITY={20,40,60};
+	public static final int[] ACTIVETIME={40,100,120};
+	public int getActiveTime(){return ACTIVETIME[type];}
 	
 	public ServerAgent(){}
-	public ServerAgent(URL server,int state){
+	public ServerAgent(URL server,int state,int type){
 		this.url=server;
 		this.state=state;
+		this.setType(type);
 		services=new ArrayList<ServiceAgent>();
 		workflows=new ArrayList<WorkflowInstanceAgent>();
 	}
 	
+	
+
+	
+	public ServerAgent(String server,int state,int type){
+		try {
+			this.url=new URL(server);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		this.state=state;
+		this.setType(type);
+		services=new ArrayList<ServiceAgent>();
+		workflows=new ArrayList<WorkflowInstanceAgent>();
+	}	
 	
 	public URL getURL() {
 		return url;
@@ -52,7 +81,8 @@ public class ServerAgent implements TreeElement{
 
 	@Override
 	public String getName() {
-		return url.getHost();
+		if(name==null)name=url.getHost();
+		return name;
 	}
 	@Override
 	public boolean hasChildren() {
@@ -73,6 +103,7 @@ public class ServerAgent implements TreeElement{
 			this.setState(STATE_RUNNING);
 		if(service.getType()==ServiceAgent.TYPE_ENGINE){
 			this.engineSerivce=service;
+			service.setCapacity(SERVICECAPACITY[type]);
 		}
 	}
 	
@@ -98,7 +129,8 @@ public class ServerAgent implements TreeElement{
 	@Override
 	public Image getImage() {
 		if(state==STATE_RUNNING) return ImageFactory.getImage(ImageFactory.SERVER_RUNNING);
-		if(state==STATE_STOPPED) return ImageFactory.getImage(ImageFactory.SERVER_STOPPED);
+		if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING) return ImageFactory.getImage(ImageFactory.SERVER_STOPPED);
+		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE) return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
 		return ImageFactory.getImage(ImageFactory.SERVER);
 	}
 	
@@ -114,6 +146,15 @@ public class ServerAgent implements TreeElement{
 	}
 	public void setEngineSerivce(ServiceAgent engineSerivce) {
 		this.engineSerivce = engineSerivce;
+	}
+	public int getType() {
+		return type;
+	}
+	public void setType(int type) {
+		this.type = type;
+	}
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

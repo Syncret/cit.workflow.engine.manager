@@ -34,7 +34,7 @@ public class ImageFactory {
 	public static final String NAVIGATIONVIEW="filenav_nav.gif";
 	public static final String CONSOLEVIEW="console_view.gif";
 	public static final String WORKFLOWSVIEW="workflows.gif";
-	public static final String SERVERSTATUS="status.gif";
+	public static final String STATUS="status.gif";
 	public static final String ADDSERVER="addserver.gif";
 	public static final String ADD="add.gif";
 	public static final String DELETE="delete.gif";

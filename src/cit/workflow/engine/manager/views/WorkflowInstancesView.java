@@ -36,11 +36,14 @@ public class WorkflowInstancesView extends ViewPart {
 
 	public static final String ID = "cit.workflow.engine.manager.WorkflowInstancesView"; //$NON-NLS-1$
 	private Table table;
-	private String[] columns={"","Name","ID","State","Progress","Start Time","End Time","Busy Time","Process ID"};
-	private int[] columnWidth={20,90,50,65,100,130,130,80,150};
+	private String[] columns={"","Name","ID","State","Progress","Start Time","End Time","Busy Time","Server","Process ID"};
+	private int[] columnWidth={20,90,50,65,100,130,130,80,100,150};
 	private ServiceAgent serviceAgent=null;
+	public ServiceAgent getService() {
+		return serviceAgent;
+	}
+
 	private ArrayList<TableItemData> itemMap=new ArrayList<>();
-	private ReentrantLock lock=new ReentrantLock();
 	private static final int TABLEINDEX_ICON=0;
 	private static final int TABLEINDEX_NAME=1;
 	private static final int TABLEINDEX_WORKFLOWID=2;
@@ -49,7 +52,8 @@ public class WorkflowInstancesView extends ViewPart {
 	private static final int TABLEINDEX_STARTTIME=5;
 	private static final int TABLEINDEX_ENDTIME=6;
 	private static final int TABLEINDEX_BUSYTIME=7;
-	private static final int TABLEINDEX_PROCESSID=8;
+	private static final int TABLEINDEX_SERVER=8;
+	private static final int TABLEINDEX_PROCESSID=9;
 	private RefreshProgressThread rpt;
 	private Composite parent;
 	
@@ -147,49 +151,31 @@ public class WorkflowInstancesView extends ViewPart {
 		
 	}
 	
-	private void setFlowData(List<WorkflowInstanceAgent> workflows){
-		clearTable();
-		for(WorkflowInstanceAgent workflow:workflows){
-			addFlowData(workflow);
-		}
-		
-//		for(int i=0;i<table.getColumnCount();i++){
-//			if(i!=TABLEINDEX_PROGRESS&&i!=TABLEINDEX_PROCESSID) table.getColumn(i).pack();
-//		}
-	}
-	
 	
 	
 	public void clearTable(){
 		for(TableItemData instance:itemMap){
 			instance.bar.dispose();
 			instance.editor.dispose();
+			instance.workflow.setShow(false);
 		}
 		itemMap.clear();
 		table.removeAll();
 	}
 	
 	public void setFlowData(ServiceAgent service){
-		if(service!=this.serviceAgent)
-			setFlowData(service.getWorkflowInstance());
-		
-		/*--may slow the program--*/
-		else {
-			for (WorkflowInstanceAgent workflow : service.getWorkflowInstance()) {
-				boolean contains=false;
-				for(TableItemData data:itemMap){
-					if(data.workflow==workflow){
-						contains=true;
-						break;
-					}
-				}
-				if(!contains){
-					addFlowData(workflow);
-				}
-			}
+		if(service==null) return;
+		if(service!=this.serviceAgent){
+			clearTable();
+			this.serviceAgent=service;
 		}
-		/*-----------------------*/
-		this.serviceAgent=service;
+		for (WorkflowInstanceAgent workflow : service.getWorkflowInstance()) {
+			if (workflow.isShow())
+				continue;
+			addFlowData(workflow);
+			workflow.setShow(true);
+		}
+		
 	}
 	
 	public void addFlowData(WorkflowInstanceAgent workflow){
@@ -214,11 +200,12 @@ public class WorkflowInstancesView extends ViewPart {
 				text[TABLEINDEX_ENDTIME] = sdf.format(new Date(date));
 			else
 				text[TABLEINDEX_ENDTIME] = "";
-			date=workflow.getBusyTime();
-			if(date>0)
-				text[TABLEINDEX_BUSYTIME]=date/1000+"s";
+			double busyTime=workflow.getBusyTime();
+			if(busyTime!=0)
+				text[TABLEINDEX_BUSYTIME]=busyTime/1000+"s";
 			else
 				text[TABLEINDEX_BUSYTIME]="";
+			text[TABLEINDEX_SERVER]=workflow.getServerName();
 			text[TABLEINDEX_PROCESSID] = workflow.getProcessID();
 			item.setText(text);
 			// insert progress bar
@@ -259,15 +246,17 @@ public class WorkflowInstancesView extends ViewPart {
 							for (TableItemData itemData:itemMap) {
 								if (!itemData.item.isDisposed()&&
 										(itemData.state==WorkflowInstanceAgent.STATE_RUNNING||
+										itemData.state==WorkflowInstanceAgent.STATE_WAITING||
 										itemData.state==WorkflowInstanceAgent.STATE_STOPPED)) {
-									//check if the state has changed
-									if(itemData.state==WorkflowInstanceAgent.STATE_RUNNING
-											||itemData.state==WorkflowInstanceAgent.STATE_STOPPED)
+									if(itemData.state==WorkflowInstanceAgent.STATE_RUNNING)
 										itemData.bar.setSelection((int) (itemData.workflow.getProgress() * 100));
+									//check if the state has changed
 									if(!itemData.item.getText(TABLEINDEX_STATE).equals(itemData.workflow.getStateString()))	{
+										itemData.bar.setSelection((int) (itemData.workflow.getProgress() * 100));
 										itemData.item.setImage(TABLEINDEX_ICON, itemData.workflow.getImage());
 										itemData.item.setText(TABLEINDEX_STATE,itemData.workflow.getStateString());
 										itemData.item.setText(TABLEINDEX_PROCESSID,itemData.workflow.getProcessID());
+										itemData.item.setText(TABLEINDEX_SERVER,itemData.workflow.getServerName());
 										if(itemData.workflow.getStartTime()>0)
 											itemData.item.setText(TABLEINDEX_STARTTIME,sdf.format(itemData.workflow.getStartTime()));
 										if(itemData.workflow.getEndTime()>0)
@@ -278,6 +267,7 @@ public class WorkflowInstancesView extends ViewPart {
 									}
 								}
 							}
+							setFlowData(serviceAgent);
 						}
 					});
 				} finally {
@@ -319,6 +309,16 @@ public class WorkflowInstancesView extends ViewPart {
 		
 		public void run(){
 			view.clearTable();
+			ArrayList<WorkflowInstanceAgent> toRemove=new ArrayList<>();
+			for(WorkflowInstanceAgent workflow:serviceAgent.getWorkflowInstance()){
+				if(workflow.getState()==WorkflowInstanceAgent.STATE_FINISHED
+						||workflow.getState()==WorkflowInstanceAgent.STATE_FAILED
+						||workflow.getState()==WorkflowInstanceAgent.STATE_ABORTTED)
+					toRemove.add(workflow);
+			}
+			for(WorkflowInstanceAgent workflow:toRemove){
+				serviceAgent.getWorkflowInstance().remove(workflow);
+			}
 		}
 	}
 }

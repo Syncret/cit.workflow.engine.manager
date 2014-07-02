@@ -43,7 +43,7 @@ public class AddServerAction extends Action implements IWorkbenchAction{
 				MessageDialog.openError(window.getShell(), "Error", "URL invalid");
 				return;
 			}
-        	ServerList.addServer(new ServerAgent(url,ServerAgent.STATE_STOPPED));
+        	ServerList.addServer(new ServerAgent(url,ServerAgent.STATE_STOPPED,ServerAgent.TYPE_MIDDLE));
         	NavigationView view=(NavigationView)window.getActivePage().findView(NavigationView.ID);
         	view.refresh();
         	view.getTree().expandToLevel(2);
