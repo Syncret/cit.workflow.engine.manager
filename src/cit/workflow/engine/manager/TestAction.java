@@ -9,6 +9,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.WorkbenchWindow;
 
 import cit.workflow.engine.manager.dialog.AssignWorkflowDialog;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 
 public class TestAction extends Action {
@@ -22,7 +23,8 @@ public class TestAction extends Action {
         setId(ICommandIds.CMD_OPEN_MESSAGE);
         // Associate the action with a pre-defined command, to allow key bindings.
         setActionDefinitionId(ICommandIds.CMD_OPEN_MESSAGE);
-        setImageDescriptor(cit.workflow.engine.manager.Activator.getImageDescriptor("/icons/sample3.gif"));
+        //setImageDescriptor(cit.workflow.engine.manager.Activator.getImageDescriptor("/icons/sample3.gif"));
+        this.setImageDescriptor(ImageFactory.getImageDescriptor(ImageFactory.RUNNING));
     }
 
     public void run() {

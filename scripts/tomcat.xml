@@ -28,11 +28,11 @@
 	
 	<property name="repository.path" value="${axis2.home}/repository/services"/>
 	
-	<property name="url" value="http://localhost:8080/manager/text"/>
+	<property name="url" value="http://192.168.1.108:8080/manager/text"/>
 	
-	<property name="username" value="tomcat"/>
+	<property name="username" value="sjtucit"/>
 	
-	<property name="password" value="tomcat"/>
+	<property name="password" value="cit239"/>
 	
 	<property name="path" value="workflow"/>
   	

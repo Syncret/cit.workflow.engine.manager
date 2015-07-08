@@ -21,7 +21,10 @@ public class WorkflowInstanceAgent {
 	private long endTime=0;
 	private long busyTime=0;
 	private long acceptTime=0;
-	
+	//for test, meaning we need to print statics for previous period
+	private boolean staticsflag=false;
+	private double staticsTimeline; 
+
 	private boolean show=false;
 	
 	public static final int STATE_RUNNING=0;
@@ -129,6 +132,10 @@ public class WorkflowInstanceAgent {
 	public void setStartTime(long startTime) {
 		this.startTime = startTime;
 	}
+	public long getAcceptTime() {
+		return acceptTime;
+	}
+
 	public boolean overtime(){
 		return getRunningTime()>expectTime;
 	}
@@ -186,7 +193,20 @@ public class WorkflowInstanceAgent {
 		else return System.currentTimeMillis()-acceptTime;
 	}
 
-	public void setAcceptTime(long acceptTime) {
-		this.acceptTime = acceptTime;
+	public void setStaticsflag(boolean staticsflag) {
+		this.staticsflag = staticsflag;
+	}	
+	
+	public boolean isStaticsflag() {
+		return staticsflag;
 	}
+
+	public double getStaticsTimeline() {
+		return staticsTimeline;
+	}
+
+	public void setStaticsTimeline(double staticsTimeline) {
+		this.staticsTimeline = staticsTimeline;
+	}
+
 }

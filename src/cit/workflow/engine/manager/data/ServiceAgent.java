@@ -1,5 +1,7 @@
 package cit.workflow.engine.manager.data;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -16,6 +18,7 @@ import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
 import cit.workflow.engine.manager.views.ConsoleView;
+import cit.workflow.webservice.AwsUtility;
 import cit.workflow.webservice.WorkflowServerClient;
 
 public class ServiceAgent implements TreeElement{
@@ -26,6 +29,9 @@ public class ServiceAgent implements TreeElement{
 	private int type;
 	private int capacity=8;
 	private int runningWorkflows=0;
+	private boolean pendingShutDown=false;
+	//if agent update the process log to database
+	private boolean updateLog=false;
 	private ReentrantLock insLock=new ReentrantLock();
 	public int getRunningWorkflows() {
 		return runningWorkflows;
@@ -49,7 +55,11 @@ public class ServiceAgent implements TreeElement{
 	public static final int TYPE_ENGINE=11;
 	public static final int TYPE_OTHERS=10;
 
+	public ServiceAgent(ServerAgent server,int state) {
+		this(server,"Engine Service","workflow","Workflow",state,TYPE_ENGINE);
+	}
 	
+
 	public ServiceAgent(ServerAgent server,String name, String deployPath,String namePath,int state,int type) {
 		this.name = name;
 		this.server = server;
@@ -105,6 +115,8 @@ public class ServiceAgent implements TreeElement{
 	 */
 	public void setState(int state) {
 		this.state = state;
+		if(this.getServer()!=null && state==STATE_RUNNING)
+			this.getServer().setState(ServerAgent.STATE_RUNNING);
 	}
 
 	@Override
@@ -124,11 +136,9 @@ public class ServiceAgent implements TreeElement{
 
 	@Override
 	public Image getImage() {
-		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE)return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
-		if(state==STATE_RUNNING)return ImageFactory.getImage(ImageFactory.RUNNING);
-		if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING)return ImageFactory.getImage(ImageFactory.STOPPED);
-		return ImageFactory.getImage(ImageFactory.SERVERS);
+		return getImage(this.state);
 	}
+	
 	public static Image getImage(int state) {
 		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE)return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
 		if(state==STATE_RUNNING)return ImageFactory.getImage(ImageFactory.RUNNING);
@@ -228,6 +238,43 @@ public class ServiceAgent implements TreeElement{
 		return capacity-runningWorkflows;
 	}
 	
+	public boolean testConnection(){
+		int result=-1;
+		try {
+			HttpURLConnection connection=(HttpURLConnection) this.getWsdlURL().openConnection();
+			result=connection.getResponseCode();
+			connection.disconnect();
+		} catch (IOException e) {
+			return false;
+		}
+		if(result==200)return true;
+		else return false;
+	}
+	
+	public boolean isPendingShutDown() {
+		return pendingShutDown;
+	}
+
+
+	public void setPendingShutDown(boolean pendingShutDown) {
+		this.pendingShutDown = pendingShutDown;
+	}
+	
+	public void shutDown(){
+		if(runningWorkflows!=0){//only in case here,please do verification out of here
+			ConsoleView.println(runningWorkflows+" running workflows pending shutdown");
+			this.setPendingShutDown(true);
+			this.setState(STATE_SHUTTING);
+			server.setState(STATE_SHUTTING);
+		}
+		else{
+			this.setState(STATE_SHUTTING);
+			server.setState(STATE_SHUTTING);
+			ServerList.removeServer(server);			
+		}
+	}
+
+
 	public void assignRequest(WorkflowInstanceAgent wsAgent){
 		if(wsAgent.getService()!=null && wsAgent.getService()!=this){
 			ConsoleView.println("Error: Request assignned to wrong service");
@@ -292,16 +339,20 @@ public class ServiceAgent implements TreeElement{
 			wsAgent.setState(result?WorkflowInstanceAgent.STATE_FINISHED:WorkflowInstanceAgent.STATE_FAILED);
 			insLock.lock();
 			service.runningWorkflows--;
+			if(service.runningWorkflows==0)service.getWorkflowInstance().clear();
 			insLock.unlock();
 			if(service.runningWorkflows==0 && service.getState()==ServiceAgent.STATE_SHUTTING){
-				service.setState(ServiceAgent.STATE_AVAILABLE);
-				service.getServer().setState(ServerAgent.STATE_AVAILABLE);
+				service.setState(ServiceAgent.STATE_STOPPED);
+				service.getServer().setState(ServerAgent.STATE_STOPPED);
+				if(service.getServer().getLocation()==ServerAgent.LOC_AWSEC2){
+					AwsUtility.GetInstance().deleteEC2InstanceFromWorkbench(server);
+				}
 				ConsoleView.println("Server "+service.getServer().getName()+" shutdown");
 				
 			}
 //			ConsoleView.println((endtime-starttime-idletime)+"");
 			RequestAssigner.getInstance().workflowComplete(wsAgent);
-			if(processID!=null){
+			if(updateLog&&processID!=null&&!processLog.equals("")){
 				Connection conn=null;
 				PreparedStatement pst=null;
 				try {

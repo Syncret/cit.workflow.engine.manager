@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Image;
@@ -15,10 +17,18 @@ import cit.workflow.engine.manager.Activator;
 import cit.workflow.engine.manager.util.ImageFactory;
 
 public class ServerList implements TreeElement{
-//	private static List<ServerAgent> servers=new ArrayList<ServerAgent>();
+	public static final ReadWriteLock lock = new ReentrantReadWriteLock(false);
 	private static List<ServerAgent> servers=new ArrayList<ServerAgent>();
-	public static ServerList allServers=new ServerList();
-	
+	private static ServerList allServers=new ServerList();
+	public static List<ServerPair> ServerNumberRecord=new ArrayList<ServerPair>();
+	public static class ServerPair{
+		public int number;
+		public long time;
+		public ServerPair(long time,int number){
+			this.number=number;
+			this.time=time;
+		}
+	};
 	public static ServerList getInstance(){
 		return allServers;
 	}
@@ -45,10 +55,14 @@ public class ServerList implements TreeElement{
 //			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Add Server", server.getURL()+" Already exsit");
 //			return;
 //		}
+		lock.writeLock().lock();
 		servers.add(server);
+		lock.writeLock().unlock();
+		ServerNumberRecord.add(new ServerPair(System.currentTimeMillis(), servers.size()));
 	}
 	
 	public static void removeServer(ServerAgent server){
+		lock.writeLock().lock();
 		if(!servers.contains(server)){
 			MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Remove Server", server.getURL()+" is not in the list");
 			return;
@@ -58,11 +72,20 @@ public class ServerList implements TreeElement{
 //			return;
 //		}
 		servers.remove(server);
+		lock.writeLock().unlock();
+		ServerNumberRecord.add(new ServerPair(System.currentTimeMillis(), servers.size()));
 	}
 	
 	
 	public static List<ServerAgent> getServers(){
 		return servers;
+	}
+	
+	public static int getRunningServerNum(){
+		lock.readLock().lock();
+		int num= getEngineServices(ServerAgent.STATE_RUNNING).size();
+		lock.readLock().unlock();
+		return num;
 	}
 	
 	/**

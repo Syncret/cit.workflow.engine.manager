@@ -15,13 +15,14 @@ import cit.workflow.engine.manager.dialog.AssignWorkflowDialog;
 import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
+import cit.workflow.engine.manager.util.RequestGenerator;
 import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.engine.manager.views.WorkflowInstancesView;
 
 public class GenRequestAction extends Action implements IWorkbenchAction{
 	private IWorkbenchWindow window;
-	private RequestGenerateThread generator=null;
-	private boolean run=false;
+	private RequestGenerator generator=null;
+	private boolean runing=false;
 	private String[] text={"Generate Requests","Stop"};
 	
 	
@@ -80,8 +81,8 @@ public class GenRequestAction extends Action implements IWorkbenchAction{
     
     
     public void run(){
-    	if(run){
-    		generator.run=false;
+    	if(runing){
+    		generator.setRun(false);
     		setText(text[0]);
     		return;
     	}
@@ -92,7 +93,9 @@ public class GenRequestAction extends Action implements IWorkbenchAction{
 		}
 		WorkflowInstancesView workflowInstancesView=(WorkflowInstancesView)window.getActivePage().findView(WorkflowInstancesView.ID);
 		workflowInstancesView.setFlowData(RequestAssigner.getWaitService());
-		generator=new RequestGenerateThread();
+		generator=RequestGenerator.getInstance();
+		generator.setPatternType(RequestGenerator.PATTERN_TYPE_SUM);
+		generator.setInteval(60*1000);
 		generator.start();
 		setText(text[1]);
     }
@@ -101,32 +104,5 @@ public class GenRequestAction extends Action implements IWorkbenchAction{
 	@Override
 	public void dispose() {
 	}
-	
-	private class RequestGenerateThread extends Thread{
-		public boolean run=true;
-		public void run() {
-			int[] pattern={10,15,20,25,30,35,40,45,50,50,45,40,35,30,25,20,15,10,15,20,25,30,35,40,45,50,50,45,40,35,30,25,20,15,10};
-	    	for(int j=0;j<pattern.length;j++){
-	    		int num=pattern[j];
-	    		long now=System.currentTimeMillis();	    		
-	    		ConsoleView.println("Generator:"+pattern[j]+" requests");
-				for (int i = 0; i < num; i++) {
-					WorkflowInstanceAgent wsAgent = new WorkflowInstanceAgent(21);
-					wsAgent.setName("test");
-					wsAgent.setExpectTime(35);
-					wsAgent.setMaxDuration(35);
-					wsAgent.setMinDuration(35);
-					wsAgent.setProcessID("");
-					RequestAssigner.getInstance().acceptRequest(wsAgent);
-				}
-	    		try {
-					Thread.sleep(now-System.currentTimeMillis()+30000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-	    		if(!run)break;
-	    	}
-	    	ConsoleView.println("Generator:Complete");
-	    }
-	}
+
 }

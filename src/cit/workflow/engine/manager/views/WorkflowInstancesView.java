@@ -229,15 +229,31 @@ public class WorkflowInstancesView extends ViewPart {
 		setFlowData(serviceAgent);
 	}
 	
+	@Override
+	public void dispose(){
+		super.dispose();
+		rpt.setRun(false);
+	}
+	
 	private class RefreshProgressThread extends Thread{
 		private Display display;
+		private boolean run;
+		public boolean isRun() {
+			return run;
+		}
+
+		public void setRun(boolean run) {
+			this.run = run;
+		}
+
 		public RefreshProgressThread(Display display){
 			this.display=display;
 			this.setDaemon(true);
+			run=true;
 		}
 		
 		public void run(){
-			while(!display.isDisposed()){
+			while(run&&!display.isDisposed()){
 //				lock.lock();
 				try {
 					display.asyncExec(new Runnable() {

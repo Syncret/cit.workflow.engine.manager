@@ -16,10 +16,11 @@ public class RequestAssigner {
 	private static final ServiceAgent waitService=
 			new ServiceAgent(null, "wait service", "", "", ServiceAgent.STATE_RUNNING, ServiceAgent.TYPE_ENGINE);
 	public static final int RANDOM_ASSIGN=1;
-	
+	private boolean end=false;
 
 	private ReentrantLock reqLock=new ReentrantLock();
 	private int policy=1;
+	//waiting requests
 	private LinkedList<WorkflowInstanceAgent> requests=new LinkedList<WorkflowInstanceAgent>();
 	public LinkedList<WorkflowInstanceAgent> getRequests(){return requests;}
 	public static RequestAssigner getInstance(){
@@ -57,57 +58,85 @@ public class RequestAssigner {
 	}
 
 	
-//	public void assignRequestToService(ServiceAgent service){
-//		reqLock.lock();
-//		ArrayList<WorkflowInstanceAgent> toRemove=new ArrayList<>();
-//		for(WorkflowInstanceAgent request:requests){
-//			if(service.getVacancy()<=0)break;
-//			if(request.getService()!=waitService && request.getService()!=service)continue;
-//			service.assignRequest(request);
-//			toRemove.add(request);
-//		}
-//		for(WorkflowInstanceAgent request:toRemove){
-//			requests.remove(request);
-//		}
-//		reqLock.unlock();
-//	}
-	
-	
 	public void assignRequestToService(ServiceAgent service){
 		reqLock.lock();
-		while(service.getVacancy()>0&&requests.size()>0){
-			WorkflowInstanceAgent request=requests.pop();
+		ArrayList<WorkflowInstanceAgent> toRemove=new ArrayList<>();
+		for(WorkflowInstanceAgent request:requests){
+			if(service.getVacancy()<=0)break;
+			if(request.getService()!=null && request.getService()!=waitService && request.getService()!=service)continue;
 			service.assignRequest(request);
+			toRemove.add(request);
+		}
+		for(WorkflowInstanceAgent request:toRemove){
+			requests.remove(request);
 		}
 		reqLock.unlock();
 	}
 	
 	
+//	public void assignRequestToService(ServiceAgent service){
+//		reqLock.lock();
+//		while(service.getVacancy()>0&&requests.size()>0){
+//			WorkflowInstanceAgent request=requests.pop();
+//			service.assignRequest(request);
+//		}
+//		reqLock.unlock();
+//	}
+	
+	
 	private int sumOfWorkflow=0;
-	private int allSpentTime=0;
+	private long allSpentTime=0;
+	private long allWaitTime=0;
 	private int periodOfWorkflow=0;
-	private int periodSpentTime=0;
-	private ReentrantLock reqLock2=new ReentrantLock();
+	private long periodSpentTime=0;
+	private long periodWaitTime=0;
+	private ReentrantLock staticLock=new ReentrantLock();
 	
 	public void workflowComplete(WorkflowInstanceAgent workflow){
-		reqLock2.lock();
+		//-------------------statics---------------------
+		//you can comment all things in static block. These are all for test only
+		staticLock.lock();		
+		ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f O %s %.4f ", RequestGenerator.getInstance().getVirtualTime(),workflow.getName(),(double)(workflow.getWaitTime())/1000));
 		sumOfWorkflow++;
 		allSpentTime+=workflow.getSpentTime();
+		allWaitTime+=workflow.getWaitTime();
 		periodOfWorkflow++;
 		periodSpentTime+=workflow.getSpentTime();
-		reqLock2.unlock();
-		assignRequestToService(workflow.getService());
+		periodWaitTime+=workflow.getWaitTime();
+		staticLock.unlock();
+		if(end&&requests.size()==0){
+			List<ServiceAgent> services=ServerList.getEngineServices(ServiceAgent.STATE_RUNNING);
+			int pendingRequests=0;
+			for(ServiceAgent service:services){
+				pendingRequests+=service.getRunningWorkflows();
+			}
+			if(pendingRequests==0){
+				printStatics();
+				end=false;
+			}
+		}		
+		//-------------------statics---------------------
+		if(workflow.getService().getState()==ServiceAgent.STATE_RUNNING)
+			assignRequestToService(workflow.getService());
 	}
 	
+	
 	public void printStatics(){
-		reqLock2.lock();
+		staticLock.lock();
 		String msg=String.format("Statics: worklfows:%d, aver:%d; period:%d, aver:%d", 
 				sumOfWorkflow,sumOfWorkflow==0?0:allSpentTime/sumOfWorkflow,
 				periodOfWorkflow,periodOfWorkflow==0?0:periodSpentTime/periodOfWorkflow);
 		periodOfWorkflow=0;
 		periodSpentTime=0;
-		reqLock2.unlock();
+		periodWaitTime=0;
+		staticLock.unlock();
 		ConsoleView.println(msg);
+	}
+	public boolean isEnd() {
+		return end;
+	}
+	public void setEnd(boolean end) {
+		this.end = end;
 	}
 	
 

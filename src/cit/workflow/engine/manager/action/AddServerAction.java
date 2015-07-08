@@ -23,8 +23,8 @@ public class AddServerAction extends Action implements IWorkbenchAction{
 	private IWorkbenchWindow window;
 	
 	public AddServerAction(IWorkbenchWindow window){
-		super("Add Server");
-		setText("Add Server");
+		super("Add Local Server");
+		setText("Add Local Server");
 		this.window=window;
 //		setId(ICommandIds.CMD_ADD_SERVER);
 //		setActionDefinitionId(ICommandIds.CMD_ADD_SERVER);

@@ -8,6 +8,7 @@ import org.eclipse.ui.console.IConsoleConstants;
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.engine.manager.views.ServerInfoView;
+import cit.workflow.engine.manager.views.ServerNumberView;
 import cit.workflow.engine.manager.views.ServerStatusView;
 import cit.workflow.engine.manager.views.NavigationView;
 import cit.workflow.engine.manager.views.View;
@@ -43,7 +44,7 @@ public class DefaultPerspective implements IPerspectiveFactory {
 		IFolderLayout centerViewsFolder = layout.createFolder("CenterViewsFolder", IPageLayout.TOP, 0.75f, editorArea);
 		centerViewsFolder.addView(WorkflowInstancesView.ID);
 		centerViewsFolder.addView(ServerStatusView.ID);
-		
+		centerViewsFolder.addView(ServerNumberView.ID);
 		
 
 		

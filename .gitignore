@@ -1,3 +1,9 @@
+#My ignore
+awslib/
+lib/
+icons/*.psd
+scripts/oldwars 
+
 #################
 ## Eclipse
 #################

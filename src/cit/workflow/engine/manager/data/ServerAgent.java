@@ -1,5 +1,7 @@
 package cit.workflow.engine.manager.data;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,7 +15,9 @@ public class ServerAgent implements TreeElement{
 	private URL url;
 	private int state;
 	private int type;
+	private int location;
 	private String name;
+	private String instanceId="";
 	private List<ServiceAgent> services;
 	private ServiceAgent engineSerivce=null;
 	private List<WorkflowInstanceAgent> workflows;
@@ -24,11 +28,18 @@ public class ServerAgent implements TreeElement{
 	public static final int STATE_AVAILABLE=3;
 	public static final int STATE_ACTIVATING=4;
 	public static final int STATE_SHUTTING=5;
+	private static final String[] STATESTRING={"Stopped","Running","Invalid","Available","Activating","Shutting"};
 	
-	public static final int TYPE_SMALL=0;
-	public static final int TYPE_MIDDLE=1;
-	public static final int TYPE_BIG=2;
-	public static final int[] SERVICECAPACITY={20,40,60};
+	public static final int TYPE_MICRO=0;
+	public static final int TYPE_SMALL=1;
+	public static final int TYPE_MIDDLE=2;
+	public static final int TYPE_BIG=3;
+	
+	public static final int LOC_LOCAL=0;
+	public static final int LOC_AWSEC2=1;
+	public static final String[] LOCATIONSTRING={"local","AWS EC2"};
+	
+	public static final int[] SERVICECAPACITY={4,20,40,60};
 	public static final int[] ACTIVETIME={40,100,120};
 	public int getActiveTime(){return ACTIVETIME[type];}
 	
@@ -37,13 +48,29 @@ public class ServerAgent implements TreeElement{
 		this.url=server;
 		this.state=state;
 		this.setType(type);
+		this.setLocation(LOC_LOCAL);
+		this.setInstanceId("");
 		services=new ArrayList<ServiceAgent>();
 		workflows=new ArrayList<WorkflowInstanceAgent>();
 	}
 	
-	
-
-	
+	public ServerAgent(String server,int state,int type,int location,String instanceId){
+		if(server==null||server=="")this.url=null;
+		else {
+			try {
+				this.url = new URL(server);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+		}
+		this.state=state;
+		this.setType(type);
+		this.setLocation(location);
+		this.setInstanceId(instanceId);
+		services=new ArrayList<ServiceAgent>();
+		workflows=new ArrayList<WorkflowInstanceAgent>();
+	}
+		
 	public ServerAgent(String server,int state,int type){
 		try {
 			this.url=new URL(server);
@@ -52,9 +79,23 @@ public class ServerAgent implements TreeElement{
 		}
 		this.state=state;
 		this.setType(type);
+		this.setLocation(LOC_LOCAL);
+		this.setInstanceId("");
 		services=new ArrayList<ServiceAgent>();
 		workflows=new ArrayList<WorkflowInstanceAgent>();
 	}	
+	
+	public int getLocation() {
+		return location;
+	}
+	
+	public String getLocationString(){
+		return LOCATIONSTRING[location];
+	}
+
+	public void setLocation(int location) {
+		this.location = location;
+	}
 	
 	public URL getURL() {
 		return url;
@@ -62,12 +103,15 @@ public class ServerAgent implements TreeElement{
 	public void setURL(URL url) {
 		this.url = url;
 	}
-	public URL getServer(){
-		return url;
+	
+	public void setURL(String url){
+		try {
+			this.url=new URL(url);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 	}
-	public void setServer(URL server){
-		this.url=server;
-	}
+	
 	public int getPort(){
 		return url.getPort();
 	}
@@ -81,7 +125,10 @@ public class ServerAgent implements TreeElement{
 
 	@Override
 	public String getName() {
-		if(name==null)name=url.getHost();
+		if(name==null||name.equals("")){
+			if(instanceId=="")name=url.getHost();
+			else name=instanceId;
+		}
 		return name;
 	}
 	@Override
@@ -128,9 +175,18 @@ public class ServerAgent implements TreeElement{
 	}
 	@Override
 	public Image getImage() {
-		if(state==STATE_RUNNING) return ImageFactory.getImage(ImageFactory.SERVER_RUNNING);
-		if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING) return ImageFactory.getImage(ImageFactory.SERVER_STOPPED);
-		if(state==STATE_ACTIVATING||state==STATE_AVAILABLE) return ImageFactory.getImage(ImageFactory.GREENCIRCLE);
+		if(location==LOC_LOCAL){
+			if(state==STATE_RUNNING) return ImageFactory.getImage(ImageFactory.SERVER_RUNNING);
+			if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING) return ImageFactory.getImage(ImageFactory.SERVER_STOPPED);
+			if(state==STATE_ACTIVATING||state==STATE_AVAILABLE) return ImageFactory.getImage(ImageFactory.SERVER);
+			return ImageFactory.getImage(ImageFactory.SERVER);
+		}
+		else if(location==LOC_AWSEC2){
+			if(state==STATE_RUNNING) return ImageFactory.getImage(ImageFactory.CLUSTER_RUNNING);
+			if(state==STATE_STOPPED||state==STATE_INVALID||state==STATE_SHUTTING) return ImageFactory.getImage(ImageFactory.CLUSTER_STOPPED);
+			if(state==STATE_ACTIVATING||state==STATE_AVAILABLE) return ImageFactory.getImage(ImageFactory.CLUSTER);
+			return ImageFactory.getImage(ImageFactory.CLUSTER);
+		}
 		return ImageFactory.getImage(ImageFactory.SERVER);
 	}
 	
@@ -139,6 +195,9 @@ public class ServerAgent implements TreeElement{
 		if(this==other)return true;
 		if(other==null)return false;
 		if(!(other instanceof ServerAgent))return false;
+		if(this.getName()!=((ServerAgent)other).getName())return false;
+		if(this.getLocation()!=((ServerAgent)other).getLocation())return false;
+		if(this.getLocation()==ServerAgent.LOC_AWSEC2)return this.getInstanceId().equals(((ServerAgent)other).getInstanceId());
 		return this.getURL().equals(((ServerAgent)other).getURL());
 	}
 	public ServiceAgent getEngineSerivce() {
@@ -157,4 +216,28 @@ public class ServerAgent implements TreeElement{
 		this.name = name;
 	}
 
+	public String getInstanceId() {
+		return instanceId;
+	}
+
+	public void setInstanceId(String instanceId) {
+		this.instanceId = instanceId;
+	}
+
+	public String getStateString() {
+		return STATESTRING[this.state];
+	}
+	
+	public boolean testConnection(){
+		int result=-1;
+		try {
+			HttpURLConnection connection=(HttpURLConnection) url.openConnection();
+			result=connection.getResponseCode();
+			connection.disconnect();
+		} catch (IOException e) {
+			return false;
+		}
+		if(result==200)return true;
+		else return false;
+	}
 }

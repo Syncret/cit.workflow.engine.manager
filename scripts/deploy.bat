@@ -1,2 +1,2 @@
 cd D:\workspace\cit.workflow.engine.manager\scripts
-ant -f tomcat.xml
+D:\Apache\apache-ant-1.9.0\bin\ant -f tomcat.xml

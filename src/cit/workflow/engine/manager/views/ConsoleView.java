@@ -1,10 +1,13 @@
 package cit.workflow.engine.manager.views;  
   
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.ui.console.ConsolePlugin;  
 import org.eclipse.ui.console.IConsole;  
@@ -16,9 +19,30 @@ import org.eclipse.ui.console.MessageConsoleStream;
 public class ConsoleView implements IConsoleFactory {  
   
 	public static String ID="cit.workflow.engine.manager.views.consoleview";
-    private static MessageConsole console = new MessageConsole("", null);  
+	//comment next line to run test
+    //private static MessageConsole console = new MessageConsole("", null);
+	private static MessageConsole console = null;
     public static boolean exists = false;  
+    public static boolean logFile=false;
+    public static final int LOG_ERROR=0;
+    public static final int LOG_WARNING=1;
+    public static final int LOG_INFO=2;
+    public static final int LOG_DEBUG=3;
+    public static final int LOG_VERBOSE=4;
+    public static int logLevel=4;
+    public static String logPath="d:/workflowloglog.txt";
+    /** 
+     * 获取控制台 
+     *  
+     * @return 
+     */  
+    public static MessageConsole getConsole() {  
+ 
+    	
+        showConsole();  
   
+        return console;  
+    }  
     /** 
      * 描述:打开控制台 
      * */  
@@ -31,6 +55,7 @@ public class ConsoleView implements IConsoleFactory {
      * 描述:显示控制台 
      * */  
 	public static void showConsole() {
+		if(console==null)console = new MessageConsole("", null);
 		if (console != null) {
 			// 得到默认控制台管理器
 			IConsoleManager manager = ConsolePlugin.getDefault()
@@ -51,7 +76,8 @@ public class ConsoleView implements IConsoleFactory {
 			exists=true;
 			//redirect system.out
 			MessageConsoleStream stream = console.newMessageStream();
-			System.setOut(new PrintStream(stream));
+			//redirect the sysout to console, comment next line to let sysout print to eclipse console
+			//System.setOut(new PrintStream(stream));
 			// console.activate();
 
 		}
@@ -69,17 +95,7 @@ public class ConsoleView implements IConsoleFactory {
         }  
     }  
   
-    /** 
-     * 获取控制台 
-     *  
-     * @return 
-     */  
-    public static MessageConsole getConsole() {  
- 
-        showConsole();  
-  
-        return console;  
-    }  
+
     
 	public static void print(String message, boolean activate) {
 		if(!exists) {
@@ -118,10 +134,28 @@ public class ConsoleView implements IConsoleFactory {
         print(message, false);
     } 
     
+    public static final ReentrantLock fileLock=new ReentrantLock();
     public static void println(String message){
     	SimpleDateFormat s=new SimpleDateFormat("HH:mm:ss - ");
     	String now=s.format(new Date());
     	println(now+message,false);
+    	if(logFile){
+    		fileLock.lock();
+    		FileWriter writer;
+			try {
+				writer = new FileWriter(logPath, true);
+				writer.write(now+message+"\n");
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}finally{
+				fileLock.unlock();
+			}
+    	}
+    }
+    
+    public static void println(int level,String message){
+    	if(level>=logLevel)println(message);
     }
     
 }  

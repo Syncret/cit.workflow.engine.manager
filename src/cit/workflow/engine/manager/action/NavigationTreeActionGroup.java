@@ -48,6 +48,7 @@ import cit.workflow.engine.manager.util.RequestAssigner;
 import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.engine.manager.views.ServerStatusView;
 import cit.workflow.engine.manager.views.WorkflowInstancesView;
+import cit.workflow.webservice.AwsUtility;
 import cit.workflow.webservice.RemoteDeployer;
 import cit.workflow.webservice.WorkflowServerClient;
 
@@ -73,7 +74,9 @@ public class NavigationTreeActionGroup extends ActionGroup {
 			public void menuAboutToShow(IMenuManager manager) {
 				TreeElement element=getSelTreeEntry();
 				if(element instanceof ServerList){
-					manager.add(new AddServerAction(PlatformUI.getWorkbench().getActiveWorkbenchWindow()));
+					manager.add(new AddServerAction(window));
+					manager.add(new RunAwsEC2Instance(window));
+					manager.add(new OpenServerNumberViewAction(window));
 				}
 				else if(element instanceof ServerAgent){
 					//deploy server menus
@@ -199,8 +202,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 						
 						//test connection
 						monitor.subTask("Connection to "+serverAgent.getName());
-						URL url=serverAgent.getURL();
-						if(testConnection(url)<0){
+						if(serverAgent.testConnection()){
 							result=false;
 							return;
 						}
@@ -209,13 +211,13 @@ public class NavigationTreeActionGroup extends ActionGroup {
 						//call ant
 						monitor.subTask("Call Ant");
 						RemoteDeployer deployer = new RemoteDeployer();
-						result = deployer.deploy(url,deployPath, warPath);
+						result = deployer.deploy(serverAgent.getURL(),deployPath, warPath);
 						
 						//test connection to wsdl
 						if(result){
 							monitor.worked(2);
 							serviceAgent = new ServiceAgent(serverAgent,serviceName,deployPath,wsdlPath,ServiceAgent.STATE_RUNNING,type);
-							if(testConnection(url)<0){
+							if(serviceAgent.testConnection()){
 								result=false;
 								return;
 							}
@@ -384,8 +386,13 @@ public class NavigationTreeActionGroup extends ActionGroup {
 				confirm=MessageDialog.openConfirm(window.getShell(), "Confirm", "Are you sure to remove "+server.getName()+"?");
 			}
 			if(confirm){
-				ServerList.removeServer(server);
-				MessageDialog.openInformation(window.getShell(), "Server Removed", server.getName()+" has been removed");
+				if(server.getLocation()==ServerAgent.LOC_AWSEC2){
+					AwsUtility.GetInstance().deleteEC2InstanceFromWorkbench(server);
+				}
+				else{
+					ServerList.removeServer(server);
+					MessageDialog.openInformation(window.getShell(), "Server Removed", server.getName()+" has been removed");
+				}
 				tv.refresh();
 			}
 		}
@@ -676,16 +683,9 @@ public class NavigationTreeActionGroup extends ActionGroup {
 			TreeElement element=getSelTreeEntry();
 			if(element==null||!(element instanceof ServerAgent)) return;
 			server=(ServerAgent)element;
-			URL url=null;
-			try {
-				url=new URL(server.getURL(),"workflow/Workflow?wsdl");
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-			int code=testConnection(url);
-			ConsoleView.println("Return code from "+url.toString()+": "+code);
-			if(code==200){
-				ServiceAgent service=new ServiceAgent(server, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_RUNNING,ServiceAgent.TYPE_ENGINE);
+			ServiceAgent service=new ServiceAgent(server, ServiceAgent.STATE_RUNNING);
+			if(service.testConnection()){
+				ConsoleView.println("Success connect to"+service.getWsdlURL().toString());
 				server.addService(service);
 				refreshTree();
 			}
@@ -701,18 +701,6 @@ public class NavigationTreeActionGroup extends ActionGroup {
 		IStructuredSelection selection = (IStructuredSelection) tv
 				.getSelection();
 		return (TreeElement) (selection.getFirstElement());
-	}
-	
-	private int testConnection(URL url){
-		int result=-1;
-		try {
-			HttpURLConnection connection=(HttpURLConnection) url.openConnection();
-			result=connection.getResponseCode();
-			connection.disconnect();
-		} catch (IOException e) {
-			return -1;
-		}
-		return result;
 	}
 	
 	private void refreshTree(){

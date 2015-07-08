@@ -14,10 +14,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
@@ -141,6 +143,14 @@ public class NavigationView extends ViewPart {
 		
 	}
 	
+	public static void RefreshNavigationView(IWorkbenchWindow window){
+		if(window==null)return;
+		final NavigationView view=(NavigationView)window.getActivePage().findView(NavigationView.ID);
+		if(view==null)return;
+		window.getShell().getDisplay().asyncExec(new Runnable() {
+		    public void run() {view.refresh();}
+		}); 
+	}
 
 	
 	public void refresh(){

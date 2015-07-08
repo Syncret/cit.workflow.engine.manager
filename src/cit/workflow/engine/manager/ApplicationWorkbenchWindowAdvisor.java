@@ -74,28 +74,32 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 //    	ServerList.addServer(localServer);
     	
     	
-    	String host1="http://192.168.1.30:8080";
+    	String url="http://192.168.1.30:8080";
+    	ServerAgent ec1=new ServerAgent(url,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO);
+    	ServerList.addServer(ec1);
     	
-    	for(int i=0;i<3;i++){
-    		ServerAgent small=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_SMALL);
-    		small.addService(new ServiceAgent(null, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_AVAILABLE,ServiceAgent.TYPE_ENGINE));
-    		small.setName("small"+i);
-    		if(i==0){
-    			small.getEngineSerivce().setState(ServiceAgent.STATE_RUNNING);
-    			small.setState(ServiceAgent.STATE_RUNNING);
-    		}
-    		ServerList.addServer(small);
-    	}
-    	for(int i=0;i<2;i++){
-    		ServerAgent middle=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MIDDLE);
-    		middle.addService(new ServiceAgent(null, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_AVAILABLE,ServiceAgent.TYPE_ENGINE));
-    		middle.setName("middle"+i);
-    		ServerList.addServer(middle);
-    	}
-    	ServerAgent server1=new ServerAgent("http://122.192.64.35:8080",ServerAgent.STATE_RUNNING,ServerAgent.TYPE_MIDDLE);
-    	server1.addService(new ServiceAgent(server1, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_RUNNING, ServiceAgent.TYPE_ENGINE));
-    	server1.setName("middle2");
-    	ServerList.addServer(server1);
+//    	String host1="http://192.168.1.30:8080";    	
+//    	for(int i=0;i<3;i++){
+//    		ServerAgent small=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_SMALL);
+//    		small.addService(new ServiceAgent(null, ServiceAgent.STATE_AVAILABLE));
+//    		small.setName("small"+i);
+//    		if(i==0){
+//    			small.getEngineSerivce().setState(ServiceAgent.STATE_RUNNING);
+//    			small.setState(ServiceAgent.STATE_RUNNING);
+//    		}
+//    		ServerList.addServer(small);
+//    	}
+//    	
+//    	for(int i=0;i<2;i++){
+//    		ServerAgent middle=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MIDDLE);
+//    		middle.addService(new ServiceAgent(null, ServiceAgent.STATE_AVAILABLE));
+//    		middle.setName("middle"+i);
+//    		ServerList.addServer(middle);
+//    	}
+//    	ServerAgent server1=new ServerAgent("http://122.192.64.35:8080",ServerAgent.STATE_RUNNING,ServerAgent.TYPE_MIDDLE);
+//    	server1.addService(new ServiceAgent(server1, ServiceAgent.STATE_RUNNING));
+//    	server1.setName("middle2");
+//    	ServerList.addServer(server1);
 //    	for(int i=0;i<1;i++){
 //    		ServerAgent big=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_BIG);
 //    		big.addService(new ServiceAgent(null, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_AVAILABLE,ServiceAgent.TYPE_ENGINE));

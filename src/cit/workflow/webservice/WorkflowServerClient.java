@@ -3,6 +3,8 @@
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 
 import javax.jws.WebMethod;
@@ -91,10 +93,16 @@ public class WorkflowServerClient {
 	}
 	
 	public static void main(String[] args){
-		WorkflowServerClient client=new WorkflowServerClient("http://localhost:8080/workflow/Workflow?wsdl");
+		WorkflowServerClient client=new WorkflowServerClient("http://ec2-52-26-230-22.us-west-2.compute.amazonaws.com:8080/workflow/Workflow?wsdl");
 		client.connect();
 		try {
-			client.executeWorkflow(10);
+			for(int i=9;i<20;i++){
+				SimpleDateFormat s=new SimpleDateFormat("HH:mm:ss");
+		    	String now=s.format(new Date());
+				System.out.println(now+" - i="+i);
+				Object[] result=client.executeWorkflow(i*60);
+				System.out.println((String)result[0]+":"+((long)result[3]-(long)result[2]));
+			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

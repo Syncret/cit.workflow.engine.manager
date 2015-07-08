@@ -41,6 +41,10 @@ public class ImageFactory {
 	public static final String CLEAR="clear.gif";
 	public static final String CLEARTEXT="clear_co.gif";
 	public static final String GENREQUEST="show_group.gif";
+	public static final String CLUSTER="cluster.gif";
+	public static final String CLUSTER_ADD="cluster_add.gif";
+	public static final String CLUSTER_RUNNING="cluster_running.gif";
+	public static final String CLUSTER_STOPPED="cluster_stop.gif";
 //	private static Hashtable<String, Image> htImage = new Hashtable<String, Image>();
 	
 	

@@ -55,6 +55,11 @@
             id="cit.workflow.engine.manager.ServerStatusView"
             name="Server Status">
       </view>
+      <view
+            class="cit.workflow.engine.manager.views.ServerNumberView"
+            id="cit.workflow.engine.manager.ServerNumberView"
+            name="Server Number">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -98,7 +103,7 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="cit.workflow.engine.manager.application"
-            name="RCP Product">
+            name="Workflow Manager">
          <property
                name="aboutText"
                value="Workflow Engine Manager by CIT Lab">
@@ -111,6 +116,10 @@
                name="aboutImage"
                value="cit_lg.gif">
          </property>
+         <property
+               name="appName"
+               value="Workflow Manager">
+         </property>
       </product>
    </extension>
    <extension
@@ -120,6 +129,30 @@
             icon="icons/console_view.gif"
             label="Console">
       </consoleFactory>
+   </extension>
+   <extension
+         id="test1"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="cit.workflow.engine.manager.application"
+            name="Workflow Manager">
+         <property
+               name="windowImages"
+               value="icons/title.gif">
+         </property>
+         <property
+               name="aboutText"
+               value="Workflow Engine Manager by CIT Lab">
+         </property>
+         <property
+               name="aboutImage"
+               value="cit_lg.gif">
+         </property>
+         <property
+               name="appName"
+               value="Workflow Manager">
+         </property>
+      </product>
    </extension>
 
 </plugin>

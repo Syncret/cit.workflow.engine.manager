@@ -34,11 +34,12 @@ public class ServerInfoView extends ViewPart {
 	public static final int HOST=0;
 	public static final int PORT=1;
 	public static final int STATE=2;
-	public static final int CAPACITY=3;
-	public static final int RUNNINGINSTANCES=4;
+	public static final int LOCATION=3;
+	public static final int CAPACITY=4;
+	public static final int RUNNINGINSTANCES=5;
 	
 	
-	public static final String[] COLUMN_NAME={"Server","Port","State","Capacity","Running Instances"};
+	public static final String[] COLUMN_NAME={"Server","Port","State","Location","Capacity","Instances"};
 	
 	public ServerInfoView() {
 	}
@@ -101,16 +102,19 @@ public class ServerInfoView extends ViewPart {
 			public String getColumnText(Object element, int columnIndex) {
 				ServerAgent server=(ServerAgent)element;
 				ServiceAgent service=server.getEngineSerivce();
-				if(columnIndex==HOST)return server.getServer().getHost();
-				if(columnIndex==PORT)return server.getServer().getPort()+"";
-				if(columnIndex==STATE){
-					return ServiceAgent.getStateString(server.getState());
-				}
-				if(columnIndex==CAPACITY){
+				if(columnIndex==HOST)
+					return server.getURL().getHost();
+				else if(columnIndex==PORT)
+					return server.getURL().getPort()+"";
+				else if(columnIndex==STATE)
+					return server.getStateString();
+				else if(columnIndex==LOCATION) return server.getLocationString();
+				else if(columnIndex==CAPACITY){
 					if(service==null)return "";
 					else return service.getCapacity()+"";
 				}
-				if(columnIndex==RUNNINGINSTANCES){
+				else if(columnIndex==RUNNINGINSTANCES){
+					if(service==null)return "";
 					return service.getRunningWorkflows()+"";
 				}
 				return null;

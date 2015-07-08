@@ -27,8 +27,10 @@ import cit.workflow.engine.manager.action.GenRequestAction;
 import cit.workflow.engine.manager.action.OpenConsoleViewAction;
 import cit.workflow.engine.manager.action.OpenNavigationViewAction;
 import cit.workflow.engine.manager.action.OpenServerInfoViewAction;
+import cit.workflow.engine.manager.action.OpenServerNumberViewAction;
 import cit.workflow.engine.manager.action.OpenServerStatusViewAction;
 import cit.workflow.engine.manager.action.OpenWorkflowInstancesViewAction;
+import cit.workflow.engine.manager.action.RunAwsEC2Instance;
 import cit.workflow.engine.manager.views.View;
 
 /**
@@ -51,6 +53,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     //actions under server menu
     private IWorkbenchAction addServerAction;
     private IWorkbenchAction genRequestAction;
+    private IWorkbenchAction addEC2Action;
     
     //actions under window menu
     private IWorkbenchAction openConsoleViewAction;
@@ -58,6 +61,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction openServerInfoViewAction;
     private IWorkbenchAction openServerStatusViewAction;
     private IWorkbenchAction openWorkflowInstancesViewAction;
+    private IWorkbenchAction openServerNumberViewAction;
     private IContributionItem showViewListAction;
     private IWorkbenchAction perspectiveAction;
 
@@ -92,15 +96,18 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         controllerAction=new ControllerAction(window);
         //under server menu
         addServerAction=new AddServerAction(window);
+        addEC2Action=new RunAwsEC2Instance(window);
         genRequestAction=new GenRequestAction(window);
+        
 //        register(addServerAction);
         
         //under window menu
         openConsoleViewAction=new OpenConsoleViewAction(window);
         openNavigationViewAction=new OpenNavigationViewAction(window);
         openServerInfoViewAction=new OpenServerInfoViewAction(window);
-        openServerStatusViewAction=new OpenServerStatusViewAction(window);
+        openServerStatusViewAction=new OpenServerStatusViewAction(window);        
         openWorkflowInstancesViewAction=new OpenWorkflowInstancesViewAction(window);
+        openServerNumberViewAction=new OpenServerNumberViewAction(window);
 //        register(openConsoleViewAction);
         showViewListAction=ContributionItemFactory.VIEWS_SHORTLIST.create(window);
         
@@ -130,6 +137,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         
         //Server
         serverMenu.add(addServerAction);
+        serverMenu.add(addEC2Action);
         
         // Window
         MenuManager showViewMenu=new MenuManager("&Show View","show view");
@@ -138,6 +146,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         showViewMenu.add(openWorkflowInstancesViewAction);
         showViewMenu.add(openServerInfoViewAction);
         showViewMenu.add(openServerStatusViewAction);
+        showViewMenu.add(openServerNumberViewAction);
         showViewMenu.add(showViewListAction);
         windowMenu.add(showViewMenu);
         windowMenu.add(perspectiveAction);
@@ -150,6 +159,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));   
         toolbar.add(addServerAction);
+        toolbar.add(addEC2Action);
         toolbar.add(genRequestAction);
         toolbar.add(messagePopupAction);
         toolbar.add(controllerAction);

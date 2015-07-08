@@ -24,10 +24,12 @@ public class Constants {
 	public static final String CONN_URL = Resources.getString("CONN_URL");
 	public static final String CONN_USERNAME = Resources.getString("CONN_USERNAME");
 	public static final String CONN_PASSWORD = Resources.getString("CONN_PASSWORD");
-	public static final String GRAPH_PATH = Resources.getString("GRAPH_PATH");
-	public static final String AGENTRULE_PATH = Resources.getString("AGENTRULE_PATH");
 	public static final String WORKFLOW_ID = Resources.getString("WORKFLOW_ID");
 	public static final String MANAGER_PATH=Resources.getString("MANAGER_PATH");
+	public static final String EC2_IMAGEID=Resources.getString("EC2_IMAGEID");
+	public static final String EC2_KEY=Resources.getString("EC2_KEY");
+	public static final String EC2_SECUREGROUP=Resources.getString("EC2_SECUREGROUP");
+	
 	public static final boolean CONN_AUTOCOMMIT = true;
 	
 	/**
