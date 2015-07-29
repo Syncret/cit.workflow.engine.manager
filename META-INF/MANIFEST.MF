@@ -34,4 +34,6 @@ Bundle-ClassPath: .,
  awslib/joda-time-2.2.jar,
  awslib/spring-beans-3.0.7.jar,
  awslib/spring-context-3.0.7.jar,
- awslib/spring-core-3.0.7.jar
+ awslib/spring-core-3.0.7.jar,
+ lib/aliyun-sdk-java-online_standard-20141010.jar
+ 

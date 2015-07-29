@@ -58,6 +58,11 @@ public class PatternBasedController extends BaseController{
 			double virtualTime=RequestGenerator.getInstance().getVirtualTime();
 			//virtualTime+=0.25;
 			
+			//online learning about the execute time(fake here)
+//			int newexecuteTime=(int) (RequestGenerator.getInstance().executeTime[(int)(virtualTime-0.25)]*60*1000);
+//			executeTime=(newexecuteTime+executeTime)/2;
+//			ConsoleView.println("execute Time:"+executeTime);
+			
 			int timeIndex=(int)Math.round(virtualTime/0.25);
 			
 			double minDiffSum=Integer.MAX_VALUE;
@@ -84,8 +89,9 @@ public class PatternBasedController extends BaseController{
 			}
 			int lastPredictRequest=predictRequest;
 			int lastActureRequest=historyRequest[lastTimeIndex];
-			predictRequest=HistoryDayRequest[resultDay][resultTimeIndex+1];
-			predictIncrease=HistoryDayRequest[resultDay][resultTimeIndex+1]-HistoryDayRequest[resultDay][resultTimeIndex];
+			predictRequest=HistoryDayRequest[resultDay][(resultTimeIndex+1)%HistoryDayPattern[resultDay].length];
+			predictIncrease=HistoryDayRequest[resultDay][(resultTimeIndex+1)%HistoryDayPattern[resultDay].length]-HistoryDayRequest[resultDay][resultTimeIndex];
+
 			if(HistoryDayPattern[resultDay][resultTimeIndex]<0&&HistoryDayPattern[resultDay][resultTimeIndex+1]>0)predictPattern=0;
 			else predictPattern=HistoryDayPattern[resultDay][resultTimeIndex];
 			//this accuracy only take affect when the request is increasing

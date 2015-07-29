@@ -21,6 +21,7 @@ public class ServerAgent implements TreeElement{
 	private List<ServiceAgent> services;
 	private ServiceAgent engineSerivce=null;
 	private List<WorkflowInstanceAgent> workflows;
+	private long starttime;
 	
 	public static final int STATE_STOPPED=0;
 	public static final int STATE_RUNNING=1;
@@ -55,20 +56,7 @@ public class ServerAgent implements TreeElement{
 	}
 	
 	public ServerAgent(String server,int state,int type,int location,String instanceId){
-		if(server==null||server=="")this.url=null;
-		else {
-			try {
-				this.url = new URL(server);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-		}
-		this.state=state;
-		this.setType(type);
-		this.setLocation(location);
-		this.setInstanceId(instanceId);
-		services=new ArrayList<ServiceAgent>();
-		workflows=new ArrayList<WorkflowInstanceAgent>();
+		initialize(server, state, type, location, instanceId);
 	}
 		
 	public ServerAgent(String server,int state,int type){
@@ -84,6 +72,24 @@ public class ServerAgent implements TreeElement{
 		services=new ArrayList<ServiceAgent>();
 		workflows=new ArrayList<WorkflowInstanceAgent>();
 	}	
+	
+	private void initialize(String server,int state,int type,int location,String instanceId){
+		if(server==null||server=="")this.url=null;
+		else {
+			try {
+				this.url = new URL(server);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+		}
+		this.state=state;
+		this.setType(type);
+		this.setLocation(location);
+		this.setInstanceId(instanceId);
+		this.setStarttime(System.currentTimeMillis());
+		services=new ArrayList<ServiceAgent>();
+		workflows=new ArrayList<WorkflowInstanceAgent>();
+	}
 	
 	public int getLocation() {
 		return location;
@@ -239,5 +245,23 @@ public class ServerAgent implements TreeElement{
 		}
 		if(result==200)return true;
 		else return false;
+	}
+
+	//
+	public double getLeftPayingTime() {
+		long runningTime=System.currentTimeMillis()-starttime;
+		double inhour=runningTime/1000/60/60.0;
+		inhour%=1;
+		return 1-inhour;
+	}
+	
+	public double getPayingTime(){
+		long runningTime=System.currentTimeMillis()-starttime;
+		double inhour=runningTime/1000/60/60.0;
+		return inhour;
+	}
+
+	public void setStarttime(long starttime) {
+		this.starttime = starttime;
 	}
 }

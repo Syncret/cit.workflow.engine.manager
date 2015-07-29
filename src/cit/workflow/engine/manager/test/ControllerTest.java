@@ -16,11 +16,14 @@ public class ControllerTest {
 	
 	public static void main1(){
 		ConsoleView.logFile=true;
-		ConsoleView.logPath="d:/0628pid6-20";
+		ConsoleView.logPath="d:/0725pb";
+		ConsoleView.println("writing to "+ConsoleView.logPath);
     	initialServers();
     	RequestGenerator generator=RequestGenerator.getInstance();
+    	generator.setPatternType(RequestGenerator.PATTERN_TYPE_SINGLE);
+    	generator.setStartTime(1);
     	generator.start();
-    	BaseController controller=new PIDController(null,BaseController.SERVERCONTROL_LOCAL);
+    	BaseController controller=new PatternBasedController(null,BaseController.SERVERCONTROL_LOCAL);
     	controller.initialize();
     	controller.start();
 	}
@@ -30,7 +33,7 @@ public class ControllerTest {
 		ConsoleView.logPath="d:/testlogtest.txt";
     	RequestGenerator generator=RequestGenerator.getInstance();    
     	generator.setStartTime(1);
-    	BaseController controller=new PatternBasedController(null,BaseController.SERVERCONTROL_LOCAL);
+    	BaseController controller=new PIDController(null,BaseController.SERVERCONTROL_LOCAL);
     	controller.initialize();
     	controller.setDaemon(false);
     	controller.start();

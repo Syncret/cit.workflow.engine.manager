@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+import cit.workflow.engine.manager.controller.BaseController;
+import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
 import cit.workflow.engine.manager.data.ServiceAgent;
 import cit.workflow.engine.manager.data.WorkflowInstanceAgent;
@@ -97,6 +99,7 @@ public class RequestAssigner {
 		//you can comment all things in static block. These are all for test only
 		staticLock.lock();		
 		ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f O %s %.4f ", RequestGenerator.getInstance().getVirtualTime(),workflow.getName(),(double)(workflow.getWaitTime())/1000));
+//		ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%s - %s compelte", workflow.getName(),"i-91178266"));
 		sumOfWorkflow++;
 		allSpentTime+=workflow.getSpentTime();
 		allWaitTime+=workflow.getWaitTime();
@@ -123,6 +126,10 @@ public class RequestAssigner {
 	
 	public void printStatics(){
 		staticLock.lock();
+		for(ServiceAgent service:ServerList.getEngineServices(ServiceAgent.STATE_RUNNING)){
+			BaseController.ALLPAYINGTIME+=service.getServer().getPayingTime();
+		}
+		ConsoleView.println("ALLPAYINGTIME:"+BaseController.ALLPAYINGTIME);
 		String msg=String.format("Statics: worklfows:%d, aver:%d; period:%d, aver:%d", 
 				sumOfWorkflow,sumOfWorkflow==0?0:allSpentTime/sumOfWorkflow,
 				periodOfWorkflow,periodOfWorkflow==0?0:periodSpentTime/periodOfWorkflow);

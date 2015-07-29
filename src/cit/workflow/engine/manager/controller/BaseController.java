@@ -6,6 +6,7 @@ import java.util.List;
 
 
 
+
 import org.eclipse.ui.IWorkbenchWindow;
 
 import cit.workflow.engine.manager.data.ServerList;
@@ -23,6 +24,7 @@ public abstract class BaseController extends Thread{
 	protected int inteval=1000*60*15;
 	public static final int SERVERCONTROL_LOCAL=0;
 	public static final int SERVERCONTROL_EC2=1;
+	public static int ALLPAYINGTIME=0;
 	
 	BaseController(IWorkbenchWindow window,int serverControllerType){
 		switch(serverControllerType){
@@ -87,12 +89,14 @@ public abstract class BaseController extends Thread{
 			requires=-requires;
 			requires=Math.min(requires, serverNum-1);
 			ConsoleView.println(String.format("%02.3f A -%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
+			
+//			1.(delete policy) delete servers which have minimal running request. The servers which have no requests running will be deleted immediately
 			while(requires>0){
 				int minRunning=Integer.MAX_VALUE;
 				ServiceAgent candidate=null;
 				for(ServiceAgent service:ServerList.getEngineServices(ServiceAgent.STATE_RUNNING)){
 					if(service.getRunningWorkflows()==0){
-						ConsoleView.println(String.format("%02.3f D %s %d", RequestGenerator.getInstance().getVirtualTime(),service.getServer().getName(),--serverNum));
+						ConsoleView.println(String.format("%02.3f D %s %d %d", RequestGenerator.getInstance().getVirtualTime(),service.getServer().getName(),--serverNum,(int)service.getServer().getPayingTime()));
 						serverController.deleteServer(service.getServer());
 						requires--;
 						if(requires<=0)break;
@@ -103,11 +107,29 @@ public abstract class BaseController extends Thread{
 					}
 				}
 				if(requires>0){
-					ConsoleView.println(String.format("%02.3f D %s %d (trying delete)", RequestGenerator.getInstance().getVirtualTime(),candidate.getServer().getName(),--serverNum));
+					ConsoleView.println(String.format("%02.3f D %s %d %d(trying delete)", RequestGenerator.getInstance().getVirtualTime(),candidate.getServer().getName(),--serverNum,(int)candidate.getServer().getPayingTime()));
 					serverController.deleteServer(candidate.getServer());
 					requires--;
 				}
 			}
+//			
+			//2. (delete policy) delele servers which will get paid soon. If no servers will get paid in a control period. These servers will left to next control
+//			String testmsg="";
+//			for (ServiceAgent service : ServerList.getEngineServices(ServiceAgent.STATE_RUNNING)) {
+//				double leftPayingTime = service.getServer().getLeftPayingTime();
+//				testmsg+=String.format("%s:%.2f, ", service.getServer().getName(),leftPayingTime);
+//				if (leftPayingTime < 0.4) {
+//					int payingTime=(int) Math.ceil(service.getServer().getPayingTime());
+//					ConsoleView.println(String.format("%02.3f D %s %d %.3f %d", RequestGenerator.getInstance().getVirtualTime(), service.getServer().getName(), --serverNum, leftPayingTime,payingTime));
+//					serverController.deleteServer(service.getServer());
+//					requires--;
+//					ALLPAYINGTIME+=payingTime;
+//					if (requires <= 0)
+//						break;
+//				}
+//			}			
+//			ConsoleView.println(testmsg);
+			
 		}
 		else{
 			ConsoleView.println(String.format("%02.3f A 0%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));

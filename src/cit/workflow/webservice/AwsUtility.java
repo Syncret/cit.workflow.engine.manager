@@ -230,7 +230,7 @@ public class AwsUtility {
 	
 	public static void main(String[] args) {
 		List<Instance> instances=AwsUtility.GetInstance().getInstancesStatus();
-		AwsUtility.GetInstance().newEC2InstanceFromWorkbench(null);
+//		AwsUtility.GetInstance().newEC2InstanceFromWorkbench(null);
 	}
 
 }

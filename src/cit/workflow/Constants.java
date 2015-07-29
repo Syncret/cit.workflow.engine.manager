@@ -30,6 +30,9 @@ public class Constants {
 	public static final String EC2_KEY=Resources.getString("EC2_KEY");
 	public static final String EC2_SECUREGROUP=Resources.getString("EC2_SECUREGROUP");
 	
+	public static final String ALI_ACCESSKEYID=Resources.getString("ALI_ACCESSKEYID");
+	public static final String ALI_ACCESSKEYSECRET=Resources.getString("ALI_ACCESSKEYSECRET");
+	
 	public static final boolean CONN_AUTOCOMMIT = true;
 	
 	/**
