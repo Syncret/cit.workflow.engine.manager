@@ -3,6 +3,7 @@ awslib/
 lib/
 icons/*.psd
 scripts/oldwars 
+scripts/oldwars/
 
 #################
 ## Eclipse
