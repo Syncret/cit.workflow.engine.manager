@@ -7,8 +7,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IWorkbenchWindow;
 
+import cit.workflow.engine.manager.server.AliyunInstanceProxy;
+import cit.workflow.engine.manager.server.AwsInstanceProxy;
 import cit.workflow.engine.manager.util.ImageFactory;
 
 public class ServerAgent implements TreeElement{
@@ -38,7 +42,8 @@ public class ServerAgent implements TreeElement{
 	
 	public static final int LOC_LOCAL=0;
 	public static final int LOC_AWSEC2=1;
-	public static final String[] LOCATIONSTRING={"local","AWS EC2"};
+	public static final int LOC_ALIYUN=2;
+	public static final String[] LOCATIONSTRING={"local","AWS EC2","Aliyun ECS"};
 	
 	public static final int[] SERVICECAPACITY={4,20,40,60};
 	public static final int[] ACTIVETIME={40,100,120};
@@ -263,5 +268,17 @@ public class ServerAgent implements TreeElement{
 
 	public void setStarttime(long starttime) {
 		this.starttime = starttime;
+	}
+	
+	public void delete(IWorkbenchWindow window){
+		if(this.getLocation()==ServerAgent.LOC_AWSEC2){
+			AwsInstanceProxy.getInstance().deleteInstance(this,window);
+		}
+		else if(this.getLocation()==ServerAgent.LOC_ALIYUN){
+			AliyunInstanceProxy.getInstance().deleteInstance(this,window);
+		}
+		else{
+			ServerList.removeServer(this);
+		}
 	}
 }

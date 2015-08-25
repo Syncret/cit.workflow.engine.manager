@@ -85,6 +85,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
     	ec2.addService(es1);
     	ServerList.addServer(ec2);
     	
+    	ServerAgent ali=new ServerAgent("http://10.173.249.189:8080",ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_ALIYUN,"i-28hd94z1v");
+    	ServerList.addServer(ali);
+    	
 //    	String host1="http://192.168.1.30:8080";    	
 //    	for(int i=0;i<3;i++){
 //    		ServerAgent small=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_SMALL);

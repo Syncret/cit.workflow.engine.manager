@@ -102,10 +102,14 @@ public class ServerInfoView extends ViewPart {
 			public String getColumnText(Object element, int columnIndex) {
 				ServerAgent server=(ServerAgent)element;
 				ServiceAgent service=server.getEngineSerivce();
-				if(columnIndex==HOST)
+				if(columnIndex==HOST){
+					if(server.getURL()==null)return "";
 					return server.getURL().getHost();
-				else if(columnIndex==PORT)
+				}
+				else if(columnIndex==PORT){
+					if(server.getURL()==null)return "";
 					return server.getURL().getPort()+"";
+				}
 				else if(columnIndex==STATE)
 					return server.getStateString();
 				else if(columnIndex==LOCATION) return server.getLocationString();

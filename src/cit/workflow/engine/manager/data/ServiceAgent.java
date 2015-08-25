@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.swt.graphics.Image;
 
+import cit.workflow.engine.manager.server.AwsInstanceProxy;
 import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
@@ -345,7 +346,7 @@ public class ServiceAgent implements TreeElement{
 				service.setState(ServiceAgent.STATE_STOPPED);
 				service.getServer().setState(ServerAgent.STATE_STOPPED);
 				if(service.getServer().getLocation()==ServerAgent.LOC_AWSEC2){
-					AwsUtility.GetInstance().deleteEC2InstanceFromWorkbench(server);
+					AwsInstanceProxy.getInstance().deleteInstance(server,null);
 				}
 				ConsoleView.println("Server "+service.getServer().getName()+" shutdown");
 				

@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -42,10 +43,12 @@ import cit.workflow.engine.manager.data.ServiceAgent;
 import cit.workflow.engine.manager.data.TreeElement;
 import cit.workflow.engine.manager.data.WorkflowInstanceAgent;
 import cit.workflow.engine.manager.dialog.AssignWorkflowDialog;
+import cit.workflow.engine.manager.server.AwsInstanceProxy;
 import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
 import cit.workflow.engine.manager.views.ConsoleView;
+import cit.workflow.engine.manager.views.NavigationView;
 import cit.workflow.engine.manager.views.ServerStatusView;
 import cit.workflow.engine.manager.views.WorkflowInstancesView;
 import cit.workflow.webservice.AwsUtility;
@@ -74,9 +77,13 @@ public class NavigationTreeActionGroup extends ActionGroup {
 			public void menuAboutToShow(IMenuManager manager) {
 				TreeElement element=getSelTreeEntry();
 				if(element instanceof ServerList){
+					MenuManager newInstanceMenuManger=new MenuManager("New Cloud Instance",ImageFactory.getImageDescriptor(ImageFactory.CLUSTER_ADD),null);
+					newInstanceMenuManger.add(new NewCloudInstance(window,NewCloudInstance.AWSEC2));
+					newInstanceMenuManger.add(new NewCloudInstance(window,NewCloudInstance.ALIYUN));
 					manager.add(new AddServerAction(window));
-					manager.add(new RunAwsEC2Instance(window));
+					manager.add(newInstanceMenuManger);
 					manager.add(new OpenServerNumberViewAction(window));
+					manager.add(new RefreshTreeAction());
 				}
 				else if(element instanceof ServerAgent){
 					//deploy server menus
@@ -386,13 +393,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 				confirm=MessageDialog.openConfirm(window.getShell(), "Confirm", "Are you sure to remove "+server.getName()+"?");
 			}
 			if(confirm){
-				if(server.getLocation()==ServerAgent.LOC_AWSEC2){
-					AwsUtility.GetInstance().deleteEC2InstanceFromWorkbench(server);
-				}
-				else{
-					ServerList.removeServer(server);
-					MessageDialog.openInformation(window.getShell(), "Server Removed", server.getName()+" has been removed");
-				}
+				server.delete(window);
 				tv.refresh();
 			}
 		}
@@ -693,6 +694,22 @@ public class NavigationTreeActionGroup extends ActionGroup {
 		
 		@Override
 		public void dispose(){
+		}
+	}
+	
+	public class RefreshTreeAction extends Action implements IWorkbenchAction{
+		public RefreshTreeAction(){
+			super();
+			this.setText("Refresh");
+		}
+		@Override
+		public void run(){
+			NavigationView.RefreshNavigationView(window);
+		}
+
+		@Override
+		public void dispose() {
+			
 		}
 	}
 

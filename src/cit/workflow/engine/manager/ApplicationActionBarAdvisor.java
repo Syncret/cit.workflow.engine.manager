@@ -30,7 +30,7 @@ import cit.workflow.engine.manager.action.OpenServerInfoViewAction;
 import cit.workflow.engine.manager.action.OpenServerNumberViewAction;
 import cit.workflow.engine.manager.action.OpenServerStatusViewAction;
 import cit.workflow.engine.manager.action.OpenWorkflowInstancesViewAction;
-import cit.workflow.engine.manager.action.RunAwsEC2Instance;
+import cit.workflow.engine.manager.action.NewCloudInstance;
 import cit.workflow.engine.manager.views.View;
 
 /**
@@ -53,7 +53,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     //actions under server menu
     private IWorkbenchAction addServerAction;
     private IWorkbenchAction genRequestAction;
-    private IWorkbenchAction addEC2Action;
+    private IWorkbenchAction addAWSEC2InstanceAction;
+    private IWorkbenchAction addAliyunInstanceAction;
     
     //actions under window menu
     private IWorkbenchAction openConsoleViewAction;
@@ -96,7 +97,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         controllerAction=new ControllerAction(window);
         //under server menu
         addServerAction=new AddServerAction(window);
-        addEC2Action=new RunAwsEC2Instance(window);
+        addAWSEC2InstanceAction=new NewCloudInstance(window,NewCloudInstance.AWSEC2);
+        addAliyunInstanceAction=new NewCloudInstance(window, NewCloudInstance.ALIYUN);
         genRequestAction=new GenRequestAction(window);
         
 //        register(addServerAction);
@@ -137,7 +139,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         
         //Server
         serverMenu.add(addServerAction);
-        serverMenu.add(addEC2Action);
+        MenuManager addInstanceMenu=new MenuManager("Add Cloud Instance");        
+        addInstanceMenu.add(addAWSEC2InstanceAction);
+        addInstanceMenu.add(addAliyunInstanceAction);
+        serverMenu.add(addInstanceMenu);
         
         // Window
         MenuManager showViewMenu=new MenuManager("&Show View","show view");
@@ -159,7 +164,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));   
         toolbar.add(addServerAction);
-        toolbar.add(addEC2Action);
         toolbar.add(genRequestAction);
         toolbar.add(messagePopupAction);
         toolbar.add(controllerAction);
