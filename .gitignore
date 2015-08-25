@@ -4,6 +4,8 @@ lib/
 icons/*.psd
 scripts/oldwars 
 scripts/oldwars/
+target/
+pom.xml
 
 #################
 ## Eclipse
