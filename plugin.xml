@@ -60,6 +60,24 @@
             id="cit.workflow.engine.manager.ServerNumberView"
             name="Server Number">
       </view>
+      <view
+            class="cit.workflow.engine.manager.views.TypeServerNumView"
+            id="cit.workflow.engine.manager.TypeServerNumView"
+            name="Servers"
+            restorable="true">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.InstanceTimeView"
+            id="cit.workflow.engine.manager.instancetimeview"
+            name="Instance Time"
+            restorable="true">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.ServerStartTimeView"
+            id="cit.workflow.engine.manager.serverstarttimeview"
+            name="Start Time"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

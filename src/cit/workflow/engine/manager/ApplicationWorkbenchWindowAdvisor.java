@@ -44,12 +44,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
         configurer.setTitle("Workflow Manager");
         
         
-        //set style
-//        IPreferenceStore preStore=PrefUtil.getAPIPreferenceStore();
-//        preStore.setValue(IWorkbenchPreferenceConstants.SHOW_TRADITIONAL_STYLE_TABS, false);
-        
-        //initial data
         initDummyDate();
+        ServerList.initialized=true;
     }
     
     @Override
@@ -75,47 +71,28 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
     	
     	
     	String url="http://192.168.1.30:8080";
-    	ServerAgent ec1=new ServerAgent(url,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO);
-    	ServiceAgent es2=new ServiceAgent(ec1, ServiceAgent.STATE_RUNNING);
-    	ec1.addService(es2);
+    	ServerAgent ec1=new ServerAgent(url,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_LOCAL,"");
+    	ServiceAgent es1=new ServiceAgent(ec1, ServiceAgent.STATE_RUNNING);
+    	ec1.addService(es1);
     	ServerList.addServer(ec1);
     	
-    	ServerAgent ec2=new ServerAgent("http://52.10.114.68:8080",ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_AWSEC2,"i-91178266");
-    	ServiceAgent es1=new ServiceAgent(ec2, ServiceAgent.STATE_RUNNING);
-    	ec2.addService(es1);
+    	String localu="http://localhost:8080";
+    	ServerAgent lc=new ServerAgent(localu,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_LOCAL,"");
+    	ServiceAgent ls=new ServiceAgent(ec1, ServiceAgent.STATE_RUNNING);
+    	lc.addService(ls);
+    	ServerList.addServer(lc);
+    	
+    	ServerAgent ec2=new ServerAgent("http://52.10.114.68:8080",ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_AWSEC2,"i-8beb674d");
+    	ServiceAgent es2=new ServiceAgent(ec2, ServiceAgent.STATE_RUNNING);
+    	ec2.addService(es2);
     	ServerList.addServer(ec2);
     	
-    	ServerAgent ali=new ServerAgent("http://10.173.249.189:8080",ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_ALIYUN,"i-28hd94z1v");
+    	
+    	ServerAgent ali=new ServerAgent("http://121.42.198.139:8080",ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MICRO,ServerAgent.LOC_ALIYUN,"i-28v6phbw6");
+    	ServiceAgent alis=new ServiceAgent(ali,ServiceAgent.STATE_RUNNING);
+    	ali.addService(alis);
     	ServerList.addServer(ali);
     	
-//    	String host1="http://192.168.1.30:8080";    	
-//    	for(int i=0;i<3;i++){
-//    		ServerAgent small=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_SMALL);
-//    		small.addService(new ServiceAgent(null, ServiceAgent.STATE_AVAILABLE));
-//    		small.setName("small"+i);
-//    		if(i==0){
-//    			small.getEngineSerivce().setState(ServiceAgent.STATE_RUNNING);
-//    			small.setState(ServiceAgent.STATE_RUNNING);
-//    		}
-//    		ServerList.addServer(small);
-//    	}
-//    	
-//    	for(int i=0;i<2;i++){
-//    		ServerAgent middle=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_MIDDLE);
-//    		middle.addService(new ServiceAgent(null, ServiceAgent.STATE_AVAILABLE));
-//    		middle.setName("middle"+i);
-//    		ServerList.addServer(middle);
-//    	}
-//    	ServerAgent server1=new ServerAgent("http://122.192.64.35:8080",ServerAgent.STATE_RUNNING,ServerAgent.TYPE_MIDDLE);
-//    	server1.addService(new ServiceAgent(server1, ServiceAgent.STATE_RUNNING));
-//    	server1.setName("middle2");
-//    	ServerList.addServer(server1);
-//    	for(int i=0;i<1;i++){
-//    		ServerAgent big=new ServerAgent(host1,ServerAgent.STATE_AVAILABLE,ServerAgent.TYPE_BIG);
-//    		big.addService(new ServiceAgent(null, "Engine Service", "workflow", "Workflow", ServiceAgent.STATE_AVAILABLE,ServiceAgent.TYPE_ENGINE));
-//    		big.setName("big"+i);
-//    		ServerList.addServer(big);
-//    	}
     }
     
 }

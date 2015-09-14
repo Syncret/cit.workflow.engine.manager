@@ -39,6 +39,9 @@ public class AliyunUtility {
 	    createInstanceRequest.setRegionId("cn-qingdao");
 	    createInstanceRequest.setImageId("ubuntu1404_64_20G_aliaegis_20150325.vhd");
 	    createInstanceRequest.setInstanceType("ecs.t1.small");
+	    createInstanceRequest.setInternetChargeType("PayByTraffic");
+	    createInstanceRequest.setInternetMaxBandwidthIn((long)10);
+	    createInstanceRequest.setInternetMaxBandwidthOut((long)10);
 	    createInstanceRequest.setSecurityGroupId("sg-28mf6bp8q");
 
 	    try {
@@ -175,13 +178,14 @@ public class AliyunUtility {
 
 	public static void main(String[] args) {
 		AliyunUtility ali=AliyunUtility.getInstance();
-		String instanceId="i-28f7cflr9";
+		String instanceId="i-28v6phbw6";
 //		ali.stopInstance(instanceId);
 //		System.out.println(ali.deleteInstance(instanceId));
 //		ali.createInstance(); 
 //		ali.startInstance(instanceId);
-		ali.describeInstanceAttribute(instanceId);
+//		ali.describeInstanceAttribute(instanceId);
 //		ali.describeInstances();
 //		ali.describeInstancesStatus();
+		ali.deleteInstance(instanceId);
 	}
 }

@@ -115,6 +115,7 @@ public class AliyunInstanceProxy implements InstanceProxyInterface{
 							}
 							server.setState(ServerAgent.STATE_RUNNING);
 							ConsoleView.println(server.getName()+" start running, ip:"+server.getURL().toString());
+							server.recordStartTime();
 							NavigationView.RefreshNavigationView(window);
 							loop=false;
 						}

@@ -13,9 +13,10 @@ public class OpenServerNumberViewAction extends Action implements IWorkbenchActi
 	private final IWorkbenchWindow window;
 	public static final String ID="cit.workflow.engine.manager.action.openservernumberviewaction";
 	private final String viewID=cit.workflow.engine.manager.views.ServerNumberView.ID;
-	public OpenServerNumberViewAction(IWorkbenchWindow window){
-		this.window=window;
-		this.setText("Server Number");
+	public OpenServerNumberViewAction(IWorkbenchWindow window, String text){
+		this.window=window;		
+		if(text.isEmpty()) text="Server Number";
+		this.setText(text);
 		setToolTipText("Open Server Number View");		
 	}
 	

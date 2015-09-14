@@ -25,12 +25,16 @@ import cit.workflow.engine.manager.action.AddServerAction;
 import cit.workflow.engine.manager.action.ControllerAction;
 import cit.workflow.engine.manager.action.GenRequestAction;
 import cit.workflow.engine.manager.action.OpenConsoleViewAction;
+import cit.workflow.engine.manager.action.OpenInstanceTimeView;
 import cit.workflow.engine.manager.action.OpenNavigationViewAction;
 import cit.workflow.engine.manager.action.OpenServerInfoViewAction;
 import cit.workflow.engine.manager.action.OpenServerNumberViewAction;
+import cit.workflow.engine.manager.action.OpenServerStartTimeViewAction;
 import cit.workflow.engine.manager.action.OpenServerStatusViewAction;
+import cit.workflow.engine.manager.action.OpenTypeServerNumViewAction;
 import cit.workflow.engine.manager.action.OpenWorkflowInstancesViewAction;
-import cit.workflow.engine.manager.action.NewCloudInstance;
+import cit.workflow.engine.manager.action.NewCloudInstanceAction;
+import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.views.View;
 
 /**
@@ -55,6 +59,16 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction genRequestAction;
     private IWorkbenchAction addAWSEC2InstanceAction;
     private IWorkbenchAction addAliyunInstanceAction;
+    private IWorkbenchAction viewAllServerNumAction;
+    private IWorkbenchAction viewAliServerNumAction;
+    private IWorkbenchAction viewAWSServerNumAction;
+    private IWorkbenchAction viewAllInstanceTimeAction;
+    private IWorkbenchAction viewAliInstanceTimeAction;
+    private IWorkbenchAction viewAWSInstanceTimeAction;
+    private IWorkbenchAction viewAllStartTimeAction;
+    private IWorkbenchAction viewAliStartTimeAction;
+    private IWorkbenchAction viewAWSStartTimeAction;
+    
     
     //actions under window menu
     private IWorkbenchAction openConsoleViewAction;
@@ -95,10 +109,21 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(messagePopupAction);
         
         controllerAction=new ControllerAction(window);
+        
         //under server menu
         addServerAction=new AddServerAction(window);
-        addAWSEC2InstanceAction=new NewCloudInstance(window,NewCloudInstance.AWSEC2);
-        addAliyunInstanceAction=new NewCloudInstance(window, NewCloudInstance.ALIYUN);
+        addAWSEC2InstanceAction=new NewCloudInstanceAction(window,NewCloudInstanceAction.AWSEC2);
+        addAliyunInstanceAction=new NewCloudInstanceAction(window, NewCloudInstanceAction.ALIYUN);
+        viewAllServerNumAction=new OpenServerNumberViewAction(window, "All");
+        viewAWSServerNumAction=new OpenTypeServerNumViewAction(window, ServerAgent.LOC_AWSEC2);
+        viewAliServerNumAction=new OpenTypeServerNumViewAction(window, ServerAgent.LOC_ALIYUN);
+        viewAllInstanceTimeAction=new OpenInstanceTimeView(window);
+        viewAWSInstanceTimeAction=new OpenInstanceTimeView(window, ServerAgent.LOC_AWSEC2);
+        viewAliInstanceTimeAction=new OpenInstanceTimeView(window, ServerAgent.LOC_ALIYUN);
+        viewAllStartTimeAction=new OpenServerStartTimeViewAction(window, -1);
+        viewAWSStartTimeAction=new OpenServerStartTimeViewAction(window, ServerAgent.LOC_AWSEC2);
+        viewAliStartTimeAction=new OpenServerStartTimeViewAction(window, ServerAgent.LOC_ALIYUN);
+        
         genRequestAction=new GenRequestAction(window);
         
 //        register(addServerAction);
@@ -109,7 +134,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         openServerInfoViewAction=new OpenServerInfoViewAction(window);
         openServerStatusViewAction=new OpenServerStatusViewAction(window);        
         openWorkflowInstancesViewAction=new OpenWorkflowInstancesViewAction(window);
-        openServerNumberViewAction=new OpenServerNumberViewAction(window);
+        openServerNumberViewAction=new OpenServerNumberViewAction(window,"");
 //        register(openConsoleViewAction);
         showViewListAction=ContributionItemFactory.VIEWS_SHORTLIST.create(window);
         
@@ -143,6 +168,21 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         addInstanceMenu.add(addAWSEC2InstanceAction);
         addInstanceMenu.add(addAliyunInstanceAction);
         serverMenu.add(addInstanceMenu);
+        MenuManager viewNumMenu=new MenuManager("View Server Numbers");
+        viewNumMenu.add(viewAllServerNumAction);
+        viewNumMenu.add(viewAWSServerNumAction);
+        viewNumMenu.add(viewAliServerNumAction);
+        serverMenu.add(viewNumMenu);
+        MenuManager viewInstanceTimeMenu=new MenuManager("View Instance Time");
+        viewInstanceTimeMenu.add(viewAllInstanceTimeAction);
+        viewInstanceTimeMenu.add(viewAWSInstanceTimeAction);
+        viewInstanceTimeMenu.add(viewAliInstanceTimeAction);
+        serverMenu.add(viewInstanceTimeMenu);
+        MenuManager viewStartTimeMenu=new MenuManager("View Server Start Time");
+        viewStartTimeMenu.add(viewAllStartTimeAction);
+        viewStartTimeMenu.add(viewAWSStartTimeAction);
+        viewStartTimeMenu.add(viewAliStartTimeAction);
+        serverMenu.add(viewStartTimeMenu);
         
         // Window
         MenuManager showViewMenu=new MenuManager("&Show View","show view");

@@ -14,7 +14,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.swt.graphics.Image;
 
+import cit.workflow.Constants;
+import cit.workflow.engine.manager.StaticSettings;
 import cit.workflow.engine.manager.server.AwsInstanceProxy;
+import cit.workflow.engine.manager.server.DummyInstanceProxy;
 import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
@@ -31,8 +34,6 @@ public class ServiceAgent implements TreeElement{
 	private int capacity=8;
 	private int runningWorkflows=0;
 	private boolean pendingShutDown=false;
-	//if agent update the process log to database
-	private boolean updateLog=false;
 	private ReentrantLock insLock=new ReentrantLock();
 	public int getRunningWorkflows() {
 		return runningWorkflows;
@@ -326,7 +327,7 @@ public class ServiceAgent implements TreeElement{
 //					starttime=(callResult[2]==null?0:(long)callResult[2]);
 //					endtime = (callResult[3] == null ? 0 : (long) callResult[3]);
 					endtime=System.currentTimeMillis();
-					idletime = (callResult[4] == null ? 0 : (int) callResult[4]);
+					idletime = (callResult[4] == null ? 0 : (long) callResult[4]);
 					wsAgent.setStartTime(starttime);
 					wsAgent.setProcessID(processID);
 					wsAgent.setEndTime(endtime);
@@ -345,26 +346,31 @@ public class ServiceAgent implements TreeElement{
 			if(service.runningWorkflows==0 && service.getState()==ServiceAgent.STATE_SHUTTING){
 				service.setState(ServiceAgent.STATE_STOPPED);
 				service.getServer().setState(ServerAgent.STATE_STOPPED);
-				if(service.getServer().getLocation()==ServerAgent.LOC_AWSEC2){
+				if(StaticSettings.DUMMYSERVERMODE){
+					new DummyInstanceProxy(service.getServer().getLocation()).deleteInstance(server, null);
+				}
+				else if(service.getServer().getLocation()==ServerAgent.LOC_AWSEC2){
 					AwsInstanceProxy.getInstance().deleteInstance(server,null);
 				}
-				ConsoleView.println("Server "+service.getServer().getName()+" shutdown");
-				
+				ConsoleView.println("Server "+service.getServer().getName()+" shutdown");				
 			}
 //			ConsoleView.println((endtime-starttime-idletime)+"");
 			RequestAssigner.getInstance().workflowComplete(wsAgent);
-			if(updateLog&&processID!=null&&!processLog.equals("")){
+			if(StaticSettings.LOGTOSQL && processID!=null && !processLog.equals("")){
 				Connection conn=null;
 				PreparedStatement pst=null;
 				try {
 					conn=ConnectionPool.getInstance().getConnection();
-					String sql="INSERT INTO processlogs(ProcessID, log, starttime,endtime, idletime) VALUES (?,?,?,?,?)";
+					String sql="INSERT INTO processlogs(ProcessID, log, starttime,endtime, idletime, workflowid, server, location) VALUES (?,?,?,?,?,?,?,?)";
 					pst=conn.prepareStatement(sql);
 					pst.setString(1, processID);
 					pst.setString(2, processLog);
 					pst.setLong(3, starttime);
 					pst.setLong(4, endtime);
 					pst.setLong(5, idletime);
+					pst.setInt(6, wsAgent.getWorkflowID());
+					pst.setString(7, service.getServer().getName());
+					pst.setInt(8, service.getServer().getLocation());
 					int rs=pst.executeUpdate();
 					pst.close();
 				} catch (SQLException e) {

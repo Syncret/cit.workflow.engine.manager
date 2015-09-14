@@ -15,6 +15,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
@@ -79,6 +81,10 @@ public class ServerNumberView extends ViewPart{
 
         XYPlot plot = (XYPlot) chart.getPlot();
         
+        NumberAxis yAxis=(NumberAxis)plot.getRangeAxis();
+        yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        yAxis.setAutoRangeIncludesZero(true);
+        
         plot.setBackgroundPaint(Color.lightGray);
         plot.setDomainGridlinePaint(Color.white);
         plot.setRangeGridlinePaint(Color.white);
@@ -100,7 +106,14 @@ public class ServerNumberView extends ViewPart{
     }
 	
 	public void setData(){
-		serverTS.addAndOrUpdate(list2ts(ServerList.ServerNumberRecord));
+//		serverTS.addAndOrUpdate(list2ts(ServerList.ServerNumberRecord));
+		try {
+			for (ServerPair serverPair : ServerList.ServerNumberRecord) {
+				serverTS.addOrUpdate(new Second(new Date(serverPair.time)), serverPair.number);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static TimeSeries list2ts(List<ServerPair> list) {
@@ -139,7 +152,7 @@ public class ServerNumberView extends ViewPart{
 					display.asyncExec(new Runnable() {
 						@Override
 						public void run() {
-							serverTS.add(new Second(),ServerList.getServers().size());
+							serverTS.addOrUpdate(new Second(),ServerList.getServers().size());
 						}
 					});
 				} finally {

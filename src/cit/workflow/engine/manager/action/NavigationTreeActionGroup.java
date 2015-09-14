@@ -48,6 +48,7 @@ import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 import cit.workflow.engine.manager.util.RequestAssigner;
 import cit.workflow.engine.manager.views.ConsoleView;
+import cit.workflow.engine.manager.views.InstanceTimeView;
 import cit.workflow.engine.manager.views.NavigationView;
 import cit.workflow.engine.manager.views.ServerStatusView;
 import cit.workflow.engine.manager.views.WorkflowInstancesView;
@@ -78,11 +79,11 @@ public class NavigationTreeActionGroup extends ActionGroup {
 				TreeElement element=getSelTreeEntry();
 				if(element instanceof ServerList){
 					MenuManager newInstanceMenuManger=new MenuManager("New Cloud Instance",ImageFactory.getImageDescriptor(ImageFactory.CLUSTER_ADD),null);
-					newInstanceMenuManger.add(new NewCloudInstance(window,NewCloudInstance.AWSEC2));
-					newInstanceMenuManger.add(new NewCloudInstance(window,NewCloudInstance.ALIYUN));
+					newInstanceMenuManger.add(new NewCloudInstanceAction(window,NewCloudInstanceAction.AWSEC2));
+					newInstanceMenuManger.add(new NewCloudInstanceAction(window,NewCloudInstanceAction.ALIYUN));
 					manager.add(new AddServerAction(window));
 					manager.add(newInstanceMenuManger);
-					manager.add(new OpenServerNumberViewAction(window));
+					manager.add(new OpenServerNumberViewAction(window,"View Server Numbers"));
 					manager.add(new RefreshTreeAction());
 				}
 				else if(element instanceof ServerAgent){
@@ -101,6 +102,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 				else if(element instanceof ServiceAgent){
 					manager.add(new AssignWorkflowAction());
 					manager.add(new ViewPerformanceAction());
+					manager.add(new ViewInstanceTimeAction());
 					manager.add(new StartServiceAction());
 					manager.add(new StopServiceAction());
 					manager.add(new UndeployServiceAction());
@@ -524,6 +526,31 @@ public class NavigationTreeActionGroup extends ActionGroup {
 			ServerStatusView ssView=(ServerStatusView)window.getActivePage().findView(ServerStatusView.ID);
 			ssView.setLabel(service.getServer().getName());
 			ssView.setData(client.getCpuPerfList(), client.getMemoryPerfList());
+		}
+		
+		@Override
+		public void dispose(){
+		}
+	}
+	
+	public class ViewInstanceTimeAction extends Action implements IWorkbenchAction{
+		private ServiceAgent service=null;
+		public ViewInstanceTimeAction(){
+			super();
+			this.setText("View Instance Execution Time");
+		}
+		@Override
+		public void run(){
+			TreeElement element=getSelTreeEntry();
+			if(element==null||!(element instanceof ServiceAgent)) return;
+			service=(ServiceAgent)element;			
+			try {
+				window.getActivePage().showView(InstanceTimeView.ID);
+				InstanceTimeView view=(InstanceTimeView)window.getActivePage().findView(InstanceTimeView.ID);
+				view.setData(service.getServer().getName());			
+			} catch (PartInitException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		@Override

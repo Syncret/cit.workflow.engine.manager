@@ -104,9 +104,10 @@ public class AwsInstanceProxy implements InstanceProxyInterface{
 										ServiceAgent service=new ServiceAgent(server, ServiceAgent.STATE_INVALID);
 										if(service.testConnection()){
 											ConsoleView.println(service.getWsdlURL()+" connect success, service started");
-											service.setState(ServiceAgent.STATE_RUNNING);											
+											service.setState(ServiceAgent.STATE_RUNNING);		
 											server.addService(service);
 											server.setState(ServerAgent.STATE_RUNNING);
+											server.recordStartTime();
 											RequestAssigner.getInstance().assignRequestToService(server.getEngineSerivce());
 										}
 										else {

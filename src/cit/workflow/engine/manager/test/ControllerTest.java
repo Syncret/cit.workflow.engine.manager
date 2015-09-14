@@ -1,5 +1,6 @@
 package cit.workflow.engine.manager.test;
 
+import cit.workflow.engine.manager.StaticSettings;
 import cit.workflow.engine.manager.controller.BaseController;
 import cit.workflow.engine.manager.controller.PIDController;
 import cit.workflow.engine.manager.controller.PatternBasedController;
@@ -11,6 +12,7 @@ import cit.workflow.engine.manager.views.ConsoleView;
 
 public class ControllerTest {
 	public static void main(String[] args) {
+		StaticSettings.LOGTOSQL=false;
 		main1();
 	}
 	
@@ -31,7 +33,7 @@ public class ControllerTest {
 	public static void main2(){
 		ConsoleView.logFile=true;
 		ConsoleView.logPath="d:/testlogtest.txt";
-    	RequestGenerator generator=RequestGenerator.getInstance();    
+    	RequestGenerator generator=RequestGenerator.getInstance();
     	generator.setStartTime(1);
     	BaseController controller=new PIDController(null,BaseController.SERVERCONTROL_LOCAL);
     	controller.initialize();

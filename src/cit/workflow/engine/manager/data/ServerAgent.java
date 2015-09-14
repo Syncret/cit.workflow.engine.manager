@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +14,11 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import cit.workflow.engine.manager.StaticSettings;
 import cit.workflow.engine.manager.server.AliyunInstanceProxy;
 import cit.workflow.engine.manager.server.AwsInstanceProxy;
+import cit.workflow.engine.manager.server.DummyInstanceProxy;
+import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 
 public class ServerAgent implements TreeElement{
@@ -49,36 +55,9 @@ public class ServerAgent implements TreeElement{
 	public static final int[] ACTIVETIME={40,100,120};
 	public int getActiveTime(){return ACTIVETIME[type];}
 	
-	public ServerAgent(){}
-	public ServerAgent(URL server,int state,int type){
-		this.url=server;
-		this.state=state;
-		this.setType(type);
-		this.setLocation(LOC_LOCAL);
-		this.setInstanceId("");
-		services=new ArrayList<ServiceAgent>();
-		workflows=new ArrayList<WorkflowInstanceAgent>();
-	}
+
 	
 	public ServerAgent(String server,int state,int type,int location,String instanceId){
-		initialize(server, state, type, location, instanceId);
-	}
-		
-	public ServerAgent(String server,int state,int type){
-		try {
-			this.url=new URL(server);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		this.state=state;
-		this.setType(type);
-		this.setLocation(LOC_LOCAL);
-		this.setInstanceId("");
-		services=new ArrayList<ServiceAgent>();
-		workflows=new ArrayList<WorkflowInstanceAgent>();
-	}	
-	
-	private void initialize(String server,int state,int type,int location,String instanceId){
 		if(server==null||server=="")this.url=null;
 		else {
 			try {
@@ -270,8 +249,40 @@ public class ServerAgent implements TreeElement{
 		this.starttime = starttime;
 	}
 	
+	//intert start cost time to sql
+	public void recordStartTime() {
+		int costTime=(int) ((System.currentTimeMillis()-this.starttime)/1000);
+		String tname=this.getName();
+		if(tname.length()>20)tname=tname.substring(0,20);
+		
+		Connection conn=null;
+		PreparedStatement pst=null;
+		try {
+			conn=ConnectionPool.getInstance().getConnection();
+			String sql="INSERT INTO managerserverstartrecord(date, location, cost, name) VALUES (?,?,?,?)";
+			pst=conn.prepareStatement(sql);
+			pst.setLong(1, this.starttime);
+			pst.setInt(2, this.location);
+			pst.setInt(3, costTime);
+			pst.setString(4, tname);				
+			pst.executeUpdate();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally{
+			if(pst!=null){
+				try {pst.close();}
+				catch (SQLException e) {e.printStackTrace();}
+			}
+			ConnectionPool.getInstance().returnConnection(conn);
+		}
+	}
+	
 	public void delete(IWorkbenchWindow window){
-		if(this.getLocation()==ServerAgent.LOC_AWSEC2){
+		if(StaticSettings.DUMMYSERVERMODE){
+			new DummyInstanceProxy(this.getLocation()).deleteInstance(this, window);
+		}
+		else if(this.getLocation()==ServerAgent.LOC_AWSEC2){			
 			AwsInstanceProxy.getInstance().deleteInstance(this,window);
 		}
 		else if(this.getLocation()==ServerAgent.LOC_ALIYUN){
@@ -281,4 +292,5 @@ public class ServerAgent implements TreeElement{
 			ServerList.removeServer(this);
 		}
 	}
+
 }

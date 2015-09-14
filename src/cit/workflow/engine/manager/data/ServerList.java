@@ -1,6 +1,9 @@
 package cit.workflow.engine.manager.data;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -14,12 +17,15 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import cit.workflow.engine.manager.Activator;
+import cit.workflow.engine.manager.StaticSettings;
+import cit.workflow.engine.manager.util.ConnectionPool;
 import cit.workflow.engine.manager.util.ImageFactory;
 
 public class ServerList implements TreeElement{
 	public static final ReadWriteLock lock = new ReentrantReadWriteLock(false);
 	private static List<ServerAgent> servers=new ArrayList<ServerAgent>();
 	private static ServerList allServers=new ServerList();
+	public static boolean initialized=false;
 	public static List<ServerPair> ServerNumberRecord=new ArrayList<ServerPair>();
 	public static class ServerPair{
 		public int number;
@@ -59,6 +65,7 @@ public class ServerList implements TreeElement{
 		servers.add(server);
 		lock.writeLock().unlock();
 		ServerNumberRecord.add(new ServerPair(System.currentTimeMillis(), servers.size()));
+		if(initialized)updateServerNumber();
 	}
 	
 	public static void removeServer(ServerAgent server){
@@ -74,6 +81,46 @@ public class ServerList implements TreeElement{
 		servers.remove(server);
 		lock.writeLock().unlock();
 		ServerNumberRecord.add(new ServerPair(System.currentTimeMillis(), servers.size()));
+		if(initialized)updateServerNumber();
+	}
+	
+	public static void updateServerNumber(){
+		if(StaticSettings.LOGTOSQL){
+			long date=System.currentTimeMillis();
+			int local=0;
+			int aws=0;
+			int aliyun=0;
+			
+			lock.readLock().lock();
+			for(ServerAgent server:servers){
+				if(server.getLocation()==ServerAgent.LOC_LOCAL) local++;
+				else if(server.getLocation()==ServerAgent.LOC_AWSEC2) aws++;
+				else if(server.getLocation()==ServerAgent.LOC_ALIYUN) aliyun++;
+			}
+			lock.readLock().unlock();
+			
+			Connection conn=null;
+			PreparedStatement pst=null;
+			try {
+				conn=ConnectionPool.getInstance().getConnection();
+				String sql="INSERT INTO managerservernumberrecord(date, local, aws, aliyun) VALUES (?,?,?,?)";
+				pst=conn.prepareStatement(sql);
+				pst.setLong(1, date);
+				pst.setInt(2, local);
+				pst.setInt(3, aws);
+				pst.setInt(4, aliyun);				
+				pst.executeUpdate();
+				pst.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally{
+				if(pst!=null){
+					try {pst.close();}
+					catch (SQLException e) {e.printStackTrace();}
+				}
+				ConnectionPool.getInstance().returnConnection(conn);
+			}
+		}
 	}
 	
 	
