@@ -20,7 +20,8 @@ public class DummyInstanceProxy implements InstanceProxyInterface{
 
 	@Override
 	public boolean newInstance(IWorkbenchWindow window) {
-		String instanceId="dummyserver"+Number;
+//		String instanceId="dummyserver"+Number;
+		String instanceId="i-8beb674d";
 		Number++;
 		ConsoleView.println("Start instance "+instanceId+" on "+ServerAgent.LOCATIONSTRING[location]);
 		ServerAgent server=new ServerAgent(null,ServerAgent.STATE_ACTIVATING,ServerAgent.TYPE_MICRO,ServerAgent.LOC_AWSEC2,instanceId);
@@ -61,15 +62,15 @@ public class DummyInstanceProxy implements InstanceProxyInterface{
 
 		@Override
 		public void run(){
-			inteval=(int)(Math.random()*10+10)*1000;
+			inteval=(int)(90)*1000;
 			ConsoleView.println("start thread to trace servers status");
 			try {
 				Thread.sleep(inteval);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			server.setURL("http://localhost:8080");
-			ConsoleView.println(server.getName()+" start running, ip:"+server.getURL().toString());
+			server.setURL("http://52.10.114.68:8080");
+			ConsoleView.println(server.getName()+" start running, ip:"+"52.10.114.68");
 			ServiceAgent service=new ServiceAgent(server, ServiceAgent.STATE_INVALID);
 			service.setState(ServiceAgent.STATE_RUNNING);											
 			server.addService(service);

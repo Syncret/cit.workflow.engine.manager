@@ -29,8 +29,8 @@ public class ConsoleView implements IConsoleFactory {
     public static final int LOG_INFO=2;
     public static final int LOG_DEBUG=3;
     public static final int LOG_VERBOSE=4;
-    public static int logLevel=4;
-    public static String logPath="d:/workflowloglog.txt";
+    public static int logLevel=3;
+    public static String logPath="d:/data/workflowloglog.txt";
     /** 
      * 获取控制台 
      *  
@@ -155,7 +155,7 @@ public class ConsoleView implements IConsoleFactory {
     }
     
     public static void println(int level,String message){
-    	if(level>=logLevel)println(message);
+    	if(level<=logLevel)println(message);
     }
     
 }  

@@ -79,8 +79,8 @@ public class NavigationTreeActionGroup extends ActionGroup {
 				TreeElement element=getSelTreeEntry();
 				if(element instanceof ServerList){
 					MenuManager newInstanceMenuManger=new MenuManager("New Cloud Instance",ImageFactory.getImageDescriptor(ImageFactory.CLUSTER_ADD),null);
-					newInstanceMenuManger.add(new NewCloudInstanceAction(window,NewCloudInstanceAction.AWSEC2));
-					newInstanceMenuManger.add(new NewCloudInstanceAction(window,NewCloudInstanceAction.ALIYUN));
+					newInstanceMenuManger.add(new NewCloudInstanceAction(window,ServerAgent.LOC_AWSEC2));
+					newInstanceMenuManger.add(new NewCloudInstanceAction(window,ServerAgent.LOC_ALIYUN));
 					manager.add(new AddServerAction(window));
 					manager.add(newInstanceMenuManger);
 					manager.add(new OpenServerNumberViewAction(window,"View Server Numbers"));
@@ -211,7 +211,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 						
 						//test connection
 						monitor.subTask("Connection to "+serverAgent.getName());
-						if(serverAgent.testConnection()){
+						if(!serverAgent.testConnection()){
 							result=false;
 							return;
 						}
@@ -226,7 +226,7 @@ public class NavigationTreeActionGroup extends ActionGroup {
 						if(result){
 							monitor.worked(2);
 							serviceAgent = new ServiceAgent(serverAgent,serviceName,deployPath,wsdlPath,ServiceAgent.STATE_RUNNING,type);
-							if(serviceAgent.testConnection()){
+							if(!serviceAgent.testConnection()){
 								result=false;
 								return;
 							}

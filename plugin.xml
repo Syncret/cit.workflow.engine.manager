@@ -62,7 +62,7 @@
       </view>
       <view
             class="cit.workflow.engine.manager.views.TypeServerNumView"
-            id="cit.workflow.engine.manager.TypeServerNumView"
+            id="cit.workflow.engine.manager.typeservernumview"
             name="Servers"
             restorable="true">
       </view>
@@ -76,6 +76,12 @@
             class="cit.workflow.engine.manager.views.ServerStartTimeView"
             id="cit.workflow.engine.manager.serverstarttimeview"
             name="Start Time"
+            restorable="true">
+      </view>
+      <view
+            class="cit.workflow.engine.manager.views.RequestsSumView"
+            id="cit.workflow.engine.manager.requestssumview"
+            name="Request Statics"
             restorable="true">
       </view>
    </extension>

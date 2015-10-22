@@ -18,7 +18,6 @@ public class RequestAssigner {
 	private static final ServiceAgent waitService=
 			new ServiceAgent(null, "wait service", "", "", ServiceAgent.STATE_RUNNING, ServiceAgent.TYPE_ENGINE);
 	public static final int RANDOM_ASSIGN=1;
-	private boolean end=false;
 
 	private ReentrantLock reqLock=new ReentrantLock();
 	private int policy=1;
@@ -86,67 +85,12 @@ public class RequestAssigner {
 //	}
 	
 	
-	private int sumOfWorkflow=0;
-	private long allSpentTime=0;
-	private long allWaitTime=0;
-	private int periodOfWorkflow=0;
-	private long periodSpentTime=0;
-	private long periodWaitTime=0;
-	private ReentrantLock staticLock=new ReentrantLock();
-	
 	public void workflowComplete(WorkflowInstanceAgent workflow){
-		//-------------------statics---------------------
-		//you can comment all things in static block. These are all for test only
-		staticLock.lock();		
 		ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f O %s %.4f ", RequestGenerator.getInstance().getVirtualTime(),workflow.getName(),(double)(workflow.getWaitTime())/1000));
-//		ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%s - %s compelte", workflow.getName(),"i-91178266"));
-		sumOfWorkflow++;
-		allSpentTime+=workflow.getSpentTime();
-		allWaitTime+=workflow.getWaitTime();
-		periodOfWorkflow++;
-		periodSpentTime+=workflow.getSpentTime();
-		periodWaitTime+=workflow.getWaitTime();
-		staticLock.unlock();
-		if(end&&requests.size()==0){
-			List<ServiceAgent> services=ServerList.getEngineServices(ServiceAgent.STATE_RUNNING);
-			int pendingRequests=0;
-			for(ServiceAgent service:services){
-				pendingRequests+=service.getRunningWorkflows();
-			}
-			if(pendingRequests==0){
-				printStatics();
-				end=false;
-			}
-		}		
-		//-------------------statics---------------------
 		if(workflow.getService().getState()==ServiceAgent.STATE_RUNNING)
 			assignRequestToService(workflow.getService());
 	}
 	
-	
-	public void printStatics(){
-		staticLock.lock();
-		for(ServiceAgent service:ServerList.getEngineServices(ServiceAgent.STATE_RUNNING)){
-			BaseController.ALLPAYINGTIME+=service.getServer().getPayingTime();
-		}
-		ConsoleView.println("ALLPAYINGTIME:"+BaseController.ALLPAYINGTIME);
-		String msg=String.format("Statics: worklfows:%d, aver:%d; period:%d, aver:%d", 
-				sumOfWorkflow,sumOfWorkflow==0?0:allSpentTime/sumOfWorkflow,
-				periodOfWorkflow,periodOfWorkflow==0?0:periodSpentTime/periodOfWorkflow);
-		periodOfWorkflow=0;
-		periodSpentTime=0;
-		periodWaitTime=0;
-		staticLock.unlock();
-		ConsoleView.println(msg);
-	}
-	public boolean isEnd() {
-		return end;
-	}
-	public void setEnd(boolean end) {
-		this.end = end;
-	}
-	
-
 	
 //	public void assignRequest2(WorkflowInstanceAgent wsAgent){
 //		//if no server assigned, here assign a server, if assigned, directly run the service

@@ -1,20 +1,28 @@
 package cit.workflow.engine.manager.views;
 
 import java.awt.Color;
+import java.awt.MenuBar;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.HashMap;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.part.ViewPart;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -28,8 +36,11 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
 
 import cit.workflow.engine.manager.data.ServerAgent;
+import cit.workflow.engine.manager.data.ServiceAgent;
+import cit.workflow.engine.manager.data.TreeElement;
 import cit.workflow.engine.manager.data.ServerList.ServerPair;
 import cit.workflow.engine.manager.util.ConnectionPool;
+import cit.workflow.engine.manager.util.ImageFactory;
 
 public class InstanceTimeView extends ViewPart{
 	public static final String ID = "cit.workflow.engine.manager.instancetimeview"; 
@@ -42,6 +53,9 @@ public class InstanceTimeView extends ViewPart{
 	private TimeSeries timeSeries;
 	private TimeSeriesCollection dataset;
 	private JFreeChart chart;
+	private IMenuManager menuBar;
+	private MenuManager selectWorkflowMenu;
+	private ArrayList<Integer> workflowLists=new ArrayList<>();
 	
 	public InstanceTimeView(){
 	}
@@ -49,6 +63,12 @@ public class InstanceTimeView extends ViewPart{
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		IToolBarManager toolBarManager = getViewSite().getActionBars().getToolBarManager();
+		menuBar=getViewSite().getActionBars().getMenuManager();
+		selectWorkflowMenu=new MenuManager("Select Workflow Model",null,null);
+		selectWorkflowMenu.add(new SelectWorkflowAction(-1));
+		menuBar.add(selectWorkflowMenu);
+		 
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 		Composite container = new Composite(parent,SWT.NULL);
 		final JFreeChart serverChart = createServerCountChart();
@@ -74,7 +94,7 @@ public class InstanceTimeView extends ViewPart{
 	private JFreeChart createServerCountChart() {
     	dataset=new TimeSeriesCollection();
         chart = ChartFactory.createTimeSeriesChart(
-            "Instance Cost Time",  // title
+            "Instance Execution Time",  // title
             "Time",             // x-axis label
             "Cost Time(s)",   // y-axis label
             dataset,            // data
@@ -117,12 +137,15 @@ public class InstanceTimeView extends ViewPart{
 	
 	public void setData(int mode, int serverLocation, String serverName){
 		String title="";
-		if(mode==MODE_ALL)title="Instance Execute Time on All Servers";
-		else if(mode==MODE_LOCATION) title="Instance Execute Time on "+ServerAgent.LOCATIONSTRING[serverLocation];
-		else if(mode==MODE_SERVER) title="Instance Execute Time on "+serverName;
+		if(mode==MODE_ALL)title="Instance Execution Time on All Servers";
+		else if(mode==MODE_LOCATION) title="Instance Execution Time on "+ServerAgent.LOCATIONSTRING[serverLocation];
+		else if(mode==MODE_SERVER) title="Instance Execution Time on "+serverName;
 		chart.setTitle(title);
 		
 		dataset.removeAllSeries();		
+		selectWorkflowMenu.removeAll();
+		selectWorkflowMenu.add(new SelectWorkflowAction(-1));
+		workflowLists.clear();
 		
 		Connection conn=null;
 		try {
@@ -162,12 +185,17 @@ public class InstanceTimeView extends ViewPart{
 					ts=new TimeSeries("Workflow"+workflowid);
 					map.put(workflowid, ts);
 				}
-				ts.add(new Second(new Date(starttime)),(int)((endtime-starttime)/1000));
+				ts.addOrUpdate(new Second(new Date(starttime)),(int)((endtime-starttime)/1000));
 			}
 			pst.close();
-			for(TimeSeries ts:map.values()){
+			for(int id:map.keySet()){
+				TimeSeries ts=map.get(id);
 				dataset.addSeries(ts);
+				workflowLists.add(id);
+				selectWorkflowMenu.add(new SelectWorkflowAction(id));
 			}
+			menuBar.add(selectWorkflowMenu);
+			SelectVisibleWorkflow(-1);//show all workflows
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}finally{
@@ -175,15 +203,32 @@ public class InstanceTimeView extends ViewPart{
 		}
 	}
 	
-	public static TimeSeries list2ts(List<ServerPair> list) {
-		TimeSeries ts = new TimeSeries("");
-		try {
-			for (ServerPair serverPair : list) {
-				ts.add(new Second(new Date(serverPair.time)), serverPair.number);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+	private void SelectVisibleWorkflow(int workflowID){
+		XYPlot plot = (XYPlot) chart.getPlot();
+		XYItemRenderer r = plot.getRenderer();
+		for(int i=0;i<workflowLists.size();i++){
+			if(workflowLists.get(i)==workflowID||workflowID<0)
+				r.setSeriesVisible(i,true);
+			else
+				r.setSeriesVisible(i,false);
 		}
-		return ts;
+	}
+
+	public class SelectWorkflowAction extends Action implements IWorkbenchAction{
+		private int workflowID;
+		public SelectWorkflowAction(int workflowID){
+			super();
+			this.workflowID=workflowID;
+			if(workflowID==-1) this.setText("All");
+			else this.setText("Workflow"+workflowID);
+		}
+		@Override
+		public void run(){
+			SelectVisibleWorkflow(workflowID);
+		}
+		
+		@Override
+		public void dispose(){
+		}
 	}
 }

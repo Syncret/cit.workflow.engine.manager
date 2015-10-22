@@ -8,14 +8,12 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -31,17 +29,15 @@ import org.jfree.experimental.chart.swt.ChartComposite;
 
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.data.ServerList;
-import cit.workflow.engine.manager.data.ServerList.ServerPair;
-import cit.workflow.engine.manager.dialog.ProcessLogDialog;
 import cit.workflow.engine.manager.util.ConnectionPool;
 
-public class TypeServerNumView extends ViewPart{
-	public static final String ID = "cit.workflow.engine.manager.typeservernumview"; //$NON-NLS-1$
+public class RequestsSumView extends ViewPart{
+	public static final String ID = "cit.workflow.engine.manager.requestssumview"; //$NON-NLS-1$
 	private static final int FILL_ALL=GridData.GRAB_HORIZONTAL+GridData.HORIZONTAL_ALIGN_FILL+GridData.GRAB_VERTICAL+GridData.VERTICAL_ALIGN_FILL;
 	private TimeSeries serverTS;
 	private JFreeChart chart;
 	
-	public TypeServerNumView(){
+	public RequestsSumView(){
 	}
 	
 	@Override
@@ -58,8 +54,6 @@ public class TypeServerNumView extends ViewPart{
 	}
 	@Override
 	public void setFocus() {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	@Override
@@ -70,12 +64,12 @@ public class TypeServerNumView extends ViewPart{
 	
 	private JFreeChart createServerCountChart() {
 
-    	serverTS = new TimeSeries("Server Number");
+    	serverTS = new TimeSeries("Requests Statics");
     	TimeSeriesCollection dataset=new TimeSeriesCollection(serverTS);
         chart = ChartFactory.createTimeSeriesChart(
-            "Server Number",  // title
+            "Requests",  // title
             "Time",             // x-axis label
-            "Number",   // y-axis label
+            "Request Number",   // y-axis label
             dataset,            // data
             false,              // create legend?
             true,               // generate tooltips?
@@ -111,46 +105,46 @@ public class TypeServerNumView extends ViewPart{
     }
 	
 	
-	public void setData(int serverLocation){
-		if(serverLocation==-1)chart.setTitle("Server Number");
-		else chart.setTitle("Server Number on "+ServerAgent.LOCATIONSTRING[serverLocation]);
-		
-		String sqlword="";
-		if(serverLocation==ServerAgent.LOC_AWSEC2)sqlword="aws";
-		else if(serverLocation==ServerAgent.LOC_ALIYUN)sqlword="aliyun";
-		
+	public void setData(){
 		serverTS.clear();
+		
 		Connection conn=null;
 		try {
 			conn = ConnectionPool.getInstance().getConnection();
+			long inteval=60*60*1000;
 			long startTime=System.currentTimeMillis()-24*60*60*1000;
-			String statement=String.format("select date,%s from managerservernumberrecord where date>? order by date", sqlword);
+			startTime-=startTime%inteval;
+			String statement="SELECT timegroup, COUNT(*) FROM "
+				+"(SELECT starttime-starttime%(?) AS timegroup FROM processlogs WHERE starttime>? ) AS timegrouptable "
+				+"GROUP BY timegroup ORDER BY timegroup";
 			PreparedStatement pst=conn.prepareStatement(statement);
-			pst.setLong(1, startTime);
+			pst.setLong(1, inteval);
+			pst.setLong(2, startTime);
 			ResultSet rs=pst.executeQuery();
 			long date;
+			long tTime=Long.MAX_VALUE;
 			int num=0;
 			while(rs.next()){
 				date=rs.getLong(1);
+				while(tTime<date){
+					serverTS.add(new Second(new Date(tTime)),0);
+					tTime+=inteval;
+				}
+				tTime=date+inteval;
 				num=rs.getInt(2);
 				serverTS.add(new Second(new Date(date)),num);
 			}
-			num=0;
-			for(ServerAgent server:ServerList.getServers()){
-				if(server.getLocation()==serverLocation){
-					num++;
-				}
+			if(tTime==Long.MAX_VALUE){
+				serverTS.add(new Second(new Date(startTime)),0);
+				startTime=System.currentTimeMillis();
+				serverTS.add(new Second(new Date(startTime)),0);
 			}
-			//add current num
-			if(serverTS.getItemCount()==0){
-				serverTS.add(new Second(new Date(startTime)),num);
-			}
-			serverTS.add(new Second(new Date()),num);
 			pst.close();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}finally{
 			ConnectionPool.getInstance().returnConnection(conn);
 		}
+		
 	}
 }

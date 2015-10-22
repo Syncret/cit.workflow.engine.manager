@@ -26,16 +26,13 @@ import cit.workflow.webservice.AwsUtility;
 
 public class NewCloudInstanceAction extends Action implements IWorkbenchAction{
 	private IWorkbenchWindow window;
-	public static final int AWSEC2=0;
-	public static final int ALIYUN=1;
 	private int type=0;
-	public static final String[] TYPENAME={"AWS EC2","Aliyun ECS"};
 	
 	public NewCloudInstanceAction(IWorkbenchWindow window,int cloudType){		
 		this.window=window;
 		this.type=cloudType;
 		String title="%s instance";
-		title=String.format(title,TYPENAME[type]);
+		title=String.format(title,ServerAgent.LOCATIONSTRING[type]);
 		this.setText(title);
 //		setId(ICommandIds.CMD_ADD_SERVER);
 //		setActionDefinitionId(ICommandIds.CMD_ADD_SERVER);
@@ -48,10 +45,10 @@ public class NewCloudInstanceAction extends Action implements IWorkbenchAction{
     	}
     	else {
 	    	switch(type){
-		    	case AWSEC2:	    		
+		    	case ServerAgent.LOC_AWSEC2:	    		
 		    		AwsInstanceProxy.getInstance().newInstance(window);
 		    		break;
-		    	case ALIYUN:
+		    	case ServerAgent.LOC_ALIYUN:
 		    		AliyunInstanceProxy.getInstance().newInstance(window);
 		    		break;
 		    	default:

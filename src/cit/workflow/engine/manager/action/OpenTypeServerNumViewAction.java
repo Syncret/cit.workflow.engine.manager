@@ -28,6 +28,7 @@ public class OpenTypeServerNumViewAction  extends Action implements IWorkbenchAc
 				TypeServerNumView view=(TypeServerNumView)window.getActivePage().findView(viewID);
 				view.setData(serverLocation);
 			}catch(PartInitException e){
+				e.printStackTrace();
 				MessageDialog.openError(window.getShell(), "Error", "Error opening view:"+e.getMessage());
 			}
 		}

@@ -101,9 +101,9 @@ public class PatternBasedController extends BaseController{
 			else if(Math.abs(lastActureRequest-lastPredictRequest)<=4)predictAccuracy=0.5;//still accurate 
 			else predictAccuracy=0.3;
 			predictAccuracy=0.8;//seems it maybe better to keep a high accuracy....
-			ConsoleView.println(String.format("%02.3f S %02d, %02d, %02d(resultDay,resultTimeIndex,lastTimeIndex)", virtualTime,resultDay,resultTimeIndex,lastTimeIndex));
-			ConsoleView.println(String.format("%02.3f S %02d, %02d, %f (lPRqs,lARqs,PAcc)", virtualTime,lastPredictRequest,lastActureRequest,predictAccuracy));
-			ConsoleView.println(String.format("%02.3f S %02d, %02d, %d (PRqs,PInc,PPtn)", virtualTime,predictRequest,predictIncrease,predictPattern));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f S %02d, %02d, %02d(resultDay,resultTimeIndex,lastTimeIndex)", virtualTime,resultDay,resultTimeIndex,lastTimeIndex));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f S %02d, %02d, %f (lPRqs,lARqs,PAcc)", virtualTime,lastPredictRequest,lastActureRequest,predictAccuracy));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f S %02d, %02d, %d (PRqs,PInc,PPtn)", virtualTime,predictRequest,predictIncrease,predictPattern));
 			
 			
 			int correct=getCurrentSize();

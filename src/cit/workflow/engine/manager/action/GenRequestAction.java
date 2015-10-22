@@ -30,7 +30,7 @@ public class GenRequestAction extends Action implements IWorkbenchAction{
 		super();
 		setText(text[0]);
 		this.window=window;
-		this.setImageDescriptor(ImageFactory.getImageDescriptor(ImageFactory.GENREQUEST));
+		this.setImageDescriptor(ImageFactory.getImageDescriptor(ImageFactory.MAIL));
 	}
 	
 //    public void run() {

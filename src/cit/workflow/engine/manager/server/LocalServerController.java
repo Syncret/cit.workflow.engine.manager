@@ -45,7 +45,7 @@ public class LocalServerController implements ServerControllerInterface{
 				e.printStackTrace();
 			}
 			server.getEngineSerivce().setState(ServiceAgent.STATE_RUNNING);
-			ConsoleView.println(String.format("%2.3f R %s %d", RequestGenerator.getInstance().getVirtualTime(),server.getName(),ServerList.getRunningServerNum()));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%2.3f R %s %d", RequestGenerator.getInstance().getVirtualTime(),server.getName(),ServerList.getRunningServerNum()));
 			NavigationView.RefreshNavigationView(window); 
 			RequestAssigner.getInstance().assignRequestToService(server.getEngineSerivce());
 		}

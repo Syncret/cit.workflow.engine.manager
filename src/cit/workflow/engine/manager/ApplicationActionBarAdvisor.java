@@ -27,6 +27,7 @@ import cit.workflow.engine.manager.action.GenRequestAction;
 import cit.workflow.engine.manager.action.OpenConsoleViewAction;
 import cit.workflow.engine.manager.action.OpenInstanceTimeView;
 import cit.workflow.engine.manager.action.OpenNavigationViewAction;
+import cit.workflow.engine.manager.action.OpenRequestsSumAction;
 import cit.workflow.engine.manager.action.OpenServerInfoViewAction;
 import cit.workflow.engine.manager.action.OpenServerNumberViewAction;
 import cit.workflow.engine.manager.action.OpenServerStartTimeViewAction;
@@ -77,6 +78,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction openServerStatusViewAction;
     private IWorkbenchAction openWorkflowInstancesViewAction;
     private IWorkbenchAction openServerNumberViewAction;
+    private IWorkbenchAction openRequestsSumViewAction;
     private IContributionItem showViewListAction;
     private IWorkbenchAction perspectiveAction;
 
@@ -112,8 +114,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         
         //under server menu
         addServerAction=new AddServerAction(window);
-        addAWSEC2InstanceAction=new NewCloudInstanceAction(window,NewCloudInstanceAction.AWSEC2);
-        addAliyunInstanceAction=new NewCloudInstanceAction(window, NewCloudInstanceAction.ALIYUN);
+        addAWSEC2InstanceAction=new NewCloudInstanceAction(window,ServerAgent.LOC_AWSEC2);
+        addAliyunInstanceAction=new NewCloudInstanceAction(window, ServerAgent.LOC_ALIYUN);
         viewAllServerNumAction=new OpenServerNumberViewAction(window, "All");
         viewAWSServerNumAction=new OpenTypeServerNumViewAction(window, ServerAgent.LOC_AWSEC2);
         viewAliServerNumAction=new OpenTypeServerNumViewAction(window, ServerAgent.LOC_ALIYUN);
@@ -135,6 +137,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         openServerStatusViewAction=new OpenServerStatusViewAction(window);        
         openWorkflowInstancesViewAction=new OpenWorkflowInstancesViewAction(window);
         openServerNumberViewAction=new OpenServerNumberViewAction(window,"");
+        openRequestsSumViewAction=new OpenRequestsSumAction(window);
 //        register(openConsoleViewAction);
         showViewListAction=ContributionItemFactory.VIEWS_SHORTLIST.create(window);
         
@@ -143,7 +146,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillMenuBar(IMenuManager menuBar) {
         MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
         MenuManager serverMenu = new MenuManager("&Server");
-        MenuManager windowMenu=new MenuManager("&Window",IWorkbenchActionConstants.M_WINDOW);
+        MenuManager staticsMenu=new MenuManager("Statics");
+        MenuManager windowMenu=new MenuManager("&Window",IWorkbenchActionConstants.M_WINDOW);        
         MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
         
         
@@ -152,6 +156,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         menuBar.add(serverMenu);
         menuBar.add(windowMenu);
+        menuBar.add(staticsMenu);
         menuBar.add(helpMenu);
         
         // File
@@ -167,22 +172,25 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         MenuManager addInstanceMenu=new MenuManager("Add Cloud Instance");        
         addInstanceMenu.add(addAWSEC2InstanceAction);
         addInstanceMenu.add(addAliyunInstanceAction);
-        serverMenu.add(addInstanceMenu);
+        serverMenu.add(addInstanceMenu);        
+        
+        //Statics
+        staticsMenu.add(openRequestsSumViewAction);
         MenuManager viewNumMenu=new MenuManager("View Server Numbers");
         viewNumMenu.add(viewAllServerNumAction);
         viewNumMenu.add(viewAWSServerNumAction);
         viewNumMenu.add(viewAliServerNumAction);
-        serverMenu.add(viewNumMenu);
+        staticsMenu.add(viewNumMenu);
         MenuManager viewInstanceTimeMenu=new MenuManager("View Instance Time");
         viewInstanceTimeMenu.add(viewAllInstanceTimeAction);
         viewInstanceTimeMenu.add(viewAWSInstanceTimeAction);
         viewInstanceTimeMenu.add(viewAliInstanceTimeAction);
-        serverMenu.add(viewInstanceTimeMenu);
+        staticsMenu.add(viewInstanceTimeMenu);
         MenuManager viewStartTimeMenu=new MenuManager("View Server Start Time");
         viewStartTimeMenu.add(viewAllStartTimeAction);
         viewStartTimeMenu.add(viewAWSStartTimeAction);
         viewStartTimeMenu.add(viewAliStartTimeAction);
-        serverMenu.add(viewStartTimeMenu);
+        staticsMenu.add(viewStartTimeMenu);
         
         // Window
         MenuManager showViewMenu=new MenuManager("&Show View","show view");
@@ -204,9 +212,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));   
         toolbar.add(addServerAction);
+        toolbar.add(controllerAction);
         toolbar.add(genRequestAction);
         toolbar.add(messagePopupAction);
-        toolbar.add(controllerAction);
     }
     
     protected void fillStatusLine(IStatusLineManager statusLine){

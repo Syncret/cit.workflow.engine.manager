@@ -82,13 +82,13 @@ public abstract class BaseController extends Thread{
 	
 	public void modifyServers(int requires,int serverNum){
 		if(requires>0){
-			ConsoleView.println(String.format("%02.3f A +%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f A +%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
 			serverController.addServers(requires);
 		}
 		else if(requires<0){
 			requires=-requires;
 			requires=Math.min(requires, serverNum-1);
-			ConsoleView.println(String.format("%02.3f A -%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f A -%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
 			
 //			1.(delete policy) delete servers which have minimal running request. The servers which have no requests running will be deleted immediately
 			while(requires>0){
@@ -96,7 +96,7 @@ public abstract class BaseController extends Thread{
 				ServiceAgent candidate=null;
 				for(ServiceAgent service:ServerList.getEngineServices(ServiceAgent.STATE_RUNNING)){
 					if(service.getRunningWorkflows()==0){
-						ConsoleView.println(String.format("%02.3f D %s %d %d", RequestGenerator.getInstance().getVirtualTime(),service.getServer().getName(),--serverNum,(int)service.getServer().getPayingTime()));
+						ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f D %s %d %d", RequestGenerator.getInstance().getVirtualTime(),service.getServer().getName(),--serverNum,(int)service.getServer().getPayingTime()));
 						serverController.deleteServer(service.getServer());
 						requires--;
 						if(requires<=0)break;
@@ -107,7 +107,7 @@ public abstract class BaseController extends Thread{
 					}
 				}
 				if(requires>0){
-					ConsoleView.println(String.format("%02.3f D %s %d %d(trying delete)", RequestGenerator.getInstance().getVirtualTime(),candidate.getServer().getName(),--serverNum,(int)candidate.getServer().getPayingTime()));
+					ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f D %s %d %d(trying delete)", RequestGenerator.getInstance().getVirtualTime(),candidate.getServer().getName(),--serverNum,(int)candidate.getServer().getPayingTime()));
 					serverController.deleteServer(candidate.getServer());
 					requires--;
 				}
@@ -132,7 +132,7 @@ public abstract class BaseController extends Thread{
 			
 		}
 		else{
-			ConsoleView.println(String.format("%02.3f A 0%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
+			ConsoleView.println(ConsoleView.LOG_VERBOSE,String.format("%02.3f A 0%d %d", RequestGenerator.getInstance().getVirtualTime(),requires,serverNum));
 		}
 	}
 }

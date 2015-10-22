@@ -28,6 +28,7 @@ public class ImageFactory {
 	public static final String SERVER_RUNNING="server_running.gif";
 	public static final String SERVER_STOPPED="server_stopped.gif";
 	public static final String SERVERS="servers.gif";
+	public static final String MAIL="mail.gif";
 	public static final String TREEELEMENT="treeelement.gif";
 	public static final String GREENCIRCLE="green-circle.gif";
 	public static final String FINISHED="finished.gif";
@@ -40,7 +41,7 @@ public class ImageFactory {
 	public static final String DELETE="delete.gif";
 	public static final String CLEAR="clear.gif";
 	public static final String CLEARTEXT="clear_co.gif";
-	public static final String GENREQUEST="show_group.gif";
+	public static final String SHOWGROUP="show_group.gif";
 	public static final String CLUSTER="cluster.gif";
 	public static final String CLUSTER_ADD="cluster_add.gif";
 	public static final String CLUSTER_RUNNING="cluster_running.gif";

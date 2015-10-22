@@ -8,6 +8,7 @@ import org.eclipse.ui.console.IConsoleConstants;
 import cit.workflow.engine.manager.data.ServerAgent;
 import cit.workflow.engine.manager.views.ConsoleView;
 import cit.workflow.engine.manager.views.InstanceTimeView;
+import cit.workflow.engine.manager.views.RequestsSumView;
 import cit.workflow.engine.manager.views.ServerInfoView;
 import cit.workflow.engine.manager.views.ServerNumberView;
 import cit.workflow.engine.manager.views.ServerStartTimeView;
@@ -51,8 +52,6 @@ public class DefaultPerspective implements IPerspectiveFactory {
 		centerViewsFolder.addView(TypeServerNumView.ID);
 		centerViewsFolder.addView(InstanceTimeView.ID);
 		centerViewsFolder.addView(ServerStartTimeView.ID);
-		
-
-		
+		centerViewsFolder.addView(RequestsSumView.ID);		
 	}
 }

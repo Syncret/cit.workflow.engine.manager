@@ -76,7 +76,6 @@ public class FuzzyController extends BaseController{
 	public void run(){
 		while (run) {
 			long now = System.currentTimeMillis();
-			RequestAssigner.getInstance().printStatics();
 			int preSize = size;
 			size = getCurrentSize();
 			dsize = size - preSize;
